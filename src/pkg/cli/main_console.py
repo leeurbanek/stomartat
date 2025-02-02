@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class MyMultiCommand(click.MultiCommand):
     """Parse files that start with 'cmd_' located in this directory"""
-    
+
     def list_commands(self, ctx):
         cmd_list = []
         for filename in os.listdir(os.path.abspath(os.path.dirname(__file__))):
@@ -35,5 +35,5 @@ class MyMultiCommand(click.MultiCommand):
 def start_cli(ctx):
     """"""
     ctx.obj = dict(config_dict)
-    if ctx.obj['default']['debug']: 
+    if ctx.obj['default']['debug']:
         logger.debug(f"start_cli(ctx={ctx.obj})")

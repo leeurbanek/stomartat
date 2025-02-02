@@ -11,6 +11,7 @@ root_dir = os.path.dirname(
             os.path.abspath(__file__)
 )))
 src_dir = os.path.join(root_dir, 'src/')
+work_dir = os.path.join(root_dir, 'temp/')
 pkg_dir = os.path.join(root_dir, 'src/pkg')
 config_file = os.path.join(src_dir, 'config.ini')
 logger_conf = os.path.join(src_dir, 'logger.ini')
@@ -29,13 +30,18 @@ if not os.path.isfile(config_file):
     # Add the structure to the configparser object
     config_obj.add_section('default')
     config_obj.set('default', 'debug', 'True')
+    config_obj.set('default', 'work_dir', work_dir)
+    config_obj.add_section('interface')
     # Write the structure to the new file
     with open(config_file, 'w') as cf:
         cf.truncate()
         config_obj.write(cf)
-# If config file exists, create configparser object
-elif os.path.isfile(config_file):
+
+# Config file exists, create configparser object
+try:
     config_obj.read(config_file)
+except Exception as e:
+    print(f"{e} - {config_file}")
 
 # Check if 'debug' setting is valid
 if config_obj.get('default', 'debug').lower() in ('1', 'true', 't', 'yes', 'y'):
@@ -72,11 +78,15 @@ config_dict = dict(
 # Convert 'debug' string into a boolean value
 config_dict['default']['debug'] = config_dict['default']['debug'] in ('True')
 
+# Add main config path to config_dict
+config_dict['default']['cfg_main'] = config_file
+
 # Print/log some debug information
 logger = logging.getLogger(f"\n === Starting stomartat package ===  src/{__name__}/__init__.py")
 if config_dict['default']['debug']: logger.debug(f"""
     root_dir: {root_dir}
     src_dir: {src_dir}
+    work_dir: {work_dir}
     pkg_dir: {pkg_dir}
     logger_conf: {logger_conf}
     config_file: {config_file}

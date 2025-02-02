@@ -1,25 +1,26 @@
 """src/pkg/config_srv/ticker_symbol.py\n
-def cli_update(ctx)"""
+def update(ctx)"""
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-def cli_update(ctx):
+def update(ctx):
     """"""
-    if ctx.obj['default']['debug']:
-        logger.debug(f"cli_update(ctx={ctx.obj})")
-
     # Lists of current and argument symbols
-    cur_sym = ctx.obj['chart_service']['symbol'].split(' ')
-    arg_sym = list(ctx.obj['cli']['arguments'])
+    arguments = list(ctx.obj['interface']['arguments'])
+    cur_sym = ctx.obj['chart_service']['chart_list'].split(' ')
+
+    if ctx.obj['default']['debug']:
+        logger.debug(f"update(ctx={ctx.obj})")
 
     extend_list, remove_list = [], []  # create lists
 
     # Add symbols to extend_list/remove_list
-    for item in arg_sym:
+    for item in arguments:
         item = item.upper().strip()
+
         if item in cur_sym:
             remove_list.append(item)
         else:
@@ -33,5 +34,5 @@ def cli_update(ctx):
             cur_sym.remove(r)
 
     # Convert symbol list to string
-    new_value = ', '.join(cur_sym)
+    new_value = ', '.join(cur_sym).replace(',', '')
     return new_value
