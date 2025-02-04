@@ -1,7 +1,6 @@
-"""src/pkg/config_srv/utils.py\n
-write_config_file()"""
+"""src/pkg/utils/cfg_srv\n
+write_file()"""
 import logging
-import sys
 
 from configparser import ConfigParser
 
@@ -9,10 +8,10 @@ from configparser import ConfigParser
 logger = logging.getLogger(__name__)
 
 
-def write_config_file(ctx):
+def write_file(ctx):
     """Write new value to the appropriate config file"""
     if ctx.obj['default']['debug']:
-        logger.debug(f"write_config_file(ctx: {ctx.obj})")
+        logger.debug(f"write_file(ctx: {ctx.obj})")
 
     # Extract some config info from context object
     config_name = ctx.obj['interface']['config_file']
@@ -32,8 +31,12 @@ def write_config_file(ctx):
     except Exception as e:
         print(e)
 
-    config_obj.set(section, option, new_value)
+    try:
+        config_obj.set(section, option, str(new_value))
+    except Exception as e:
+        print(e)
 
+    # import sys
     # config_obj.write(sys.stdout)
     with open(config_file, 'w') as cf:
         config_obj.write(cf)

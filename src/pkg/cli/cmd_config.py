@@ -19,7 +19,6 @@ DESCRIPTION
 """)
 
 @click.argument('arguments', nargs=-1, default=None, required=False, type=str)
-
 # chart_srv, change the default list of charts to download
 @click.option(
     '--chart-list', 'opt_trans', flag_value='chart_list', help=f"""
@@ -28,6 +27,23 @@ DESCRIPTION
     arguments are symbols in the current list those symbols will be
     removed from the chart download list, if the arguments are not
     in the current list then those symbols will be added to the list.
+""")
+# TODO add data lookback to cmd_config
+# data_srv, change the data lookback period of time
+@click.option(
+    '--db-lookback', 'opt_trans', flag_value='db_lookback', help=f"""
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+    enim ad minim veniam, quis nostrud exercitation ullamco laboris
+    nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
+    in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+    nulla pariatur.
+""")
+# app, switch the debug option on/off
+@click.option(
+    '--debug', 'opt_trans', flag_value='debug', help=f"""
+    Displays current debug status (True/False). Entering any argument
+    will toggle debug state.
 """)
 # app, change location of the default working directory
 @click.option(
@@ -48,7 +64,7 @@ def cli(ctx, arguments, opt_trans):
     if ctx.obj['default']['debug']:
         logger.debug(f"cli(ctx={ctx.obj})")
 
-    if opt_trans == 'chart_list':
+    elif opt_trans == 'chart_list':
         cur_sym = ctx.obj['chart_service']['chart_list'].split(', ')
 
         if not arguments:
@@ -60,14 +76,37 @@ def cli(ctx, arguments, opt_trans):
 
             if click.confirm(f" Replacing\n\t{cur_sym}\n with:\n\t[{new_value}]\n Do you want to continue?"):
                 # Write new symbol list to config file
-                from pkg.config_srv import utils
+                from pkg.utils import cfg_srv
 
                 ctx.obj['interface']['config_file'] = 'cfg_chart'
                 ctx.obj['interface']['section'] = 'chart_service'
                 ctx.obj['interface']['option'] = opt_trans
                 ctx.obj['interface']['new_value'] = new_value
 
-                utils.write_config_file(ctx)
+                cfg_srv.write_file(ctx)
+                click.echo(" Done!")
+
+    if opt_trans == 'debug':
+        d_status = (f"{ctx.obj['default']['debug']}")
+
+        if not arguments:
+            click.echo(f"Debug status: {d_status}")
+        elif arguments:
+            # Toggle debug state
+            from pkg.config_srv import debug
+            new_value = debug.update(ctx)
+
+            if click.confirm(f" Change debug from: {d_status} to {new_value}\n Do you want to continue?"):
+                # Write new debug state to config file
+                from pkg.utils import cfg_srv
+
+                # Add config info to context object
+                ctx.obj['interface']['config_file'] = 'cfg_main'
+                ctx.obj['interface']['section'] = 'default'
+                ctx.obj['interface']['option'] = opt_trans
+                ctx.obj['interface']['new_value'] = new_value
+
+                cfg_srv.write_file(ctx)
                 click.echo(" Done!")
 
     elif opt_trans == 'work_dir':
@@ -82,14 +121,13 @@ def cli(ctx, arguments, opt_trans):
 
             if click.confirm(f" Replacing\n\t{cur_wdir}\n with:\n\t{new_value}\n Do you want to continue?"):
                 # Write new work directory to config file
-                from pkg.config_srv import utils
+                from pkg.utils import cfg_srv
 
-                # config_file = ctx.obj['default']['cfg_main']
                 # Add config info to context object
                 ctx.obj['interface']['config_file'] = 'cfg_main'
                 ctx.obj['interface']['section'] = 'default'
                 ctx.obj['interface']['option'] = opt_trans
                 ctx.obj['interface']['new_value'] = new_value
 
-                utils.write_config_file(ctx)
+                cfg_srv.write_file(ctx)
                 click.echo(" Done!")
