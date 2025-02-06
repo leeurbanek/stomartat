@@ -36,4 +36,4 @@ def start_cli(ctx):
     """"""
     ctx.obj = dict(config_dict)
     if ctx.obj['default']['debug']:
-        logger.debug(f"start_cli(ctx={ctx.obj})")
+        logger.debug(f"start_cli(ctx={ctx.obj}, {ctx})")

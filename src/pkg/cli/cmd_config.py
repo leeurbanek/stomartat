@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 """
 \b
 NAME
-    config - Revise certain configuration settings
+    config - Edit configuration settings
 \b
 DESCRIPTION
     The config utility writes specified arguments, separated by a
@@ -28,7 +28,6 @@ DESCRIPTION
     removed from the chart download list, if the arguments are not
     in the current list then those symbols will be added to the list.
 """)
-# TODO add data lookback to cmd_config
 # data_srv, change the data lookback period of time
 @click.option(
     '--db-lookback', 'opt_trans', flag_value='db_lookback', help=f"""
@@ -61,44 +60,47 @@ def cli(ctx, arguments, opt_trans):
     ctx.obj['interface']['arguments'] = arguments
     ctx.obj['interface']['opt_trans'] = opt_trans
 
-    if ctx.obj['default']['debug']:
-        logger.debug(f"cli(ctx={ctx.obj})")
+    if ctx.obj['default']['debug']: logger.debug(f"cli(ctx={ctx.obj})")
 
-    elif opt_trans == 'chart_list':
+    if opt_trans == 'chart_list':
         cur_sym = ctx.obj['chart_service']['chart_list'].split(', ')
 
         if not arguments:
             click.echo(f"Current chart download list: {cur_sym}")
-        elif arguments:
+        else:
             # Update chart symbol list
-            from pkg.config_srv import chart_symbol
-            new_value = chart_symbol.update(ctx)
+            from pkg.config_srv import chart
+            new_value = chart.update_symbol(ctx)
 
             if click.confirm(f" Replacing\n\t{cur_sym}\n with:\n\t[{new_value}]\n Do you want to continue?"):
                 # Write new symbol list to config file
-                from pkg.utils import cfg_srv
+                from pkg.config_srv import utils
 
                 ctx.obj['interface']['config_file'] = 'cfg_chart'
                 ctx.obj['interface']['section'] = 'chart_service'
                 ctx.obj['interface']['option'] = opt_trans
                 ctx.obj['interface']['new_value'] = new_value
 
-                cfg_srv.write_file(ctx)
+                utils.write_file(ctx)
                 click.echo(" Done!")
 
-    if opt_trans == 'debug':
+    elif opt_trans == 'db_lookback':
+        raise NotImplementedError
+# TODO add data lookback to cmd_config
+
+    elif opt_trans == 'debug':
         d_status = (f"{ctx.obj['default']['debug']}")
 
         if not arguments:
             click.echo(f"Debug status: {d_status}")
-        elif arguments:
+        else:
             # Toggle debug state
             from pkg.config_srv import debug
             new_value = debug.update(ctx)
 
             if click.confirm(f" Change debug from: {d_status} to {new_value}\n Do you want to continue?"):
                 # Write new debug state to config file
-                from pkg.utils import cfg_srv
+                from pkg.config_srv import utils
 
                 # Add config info to context object
                 ctx.obj['interface']['config_file'] = 'cfg_main'
@@ -106,7 +108,7 @@ def cli(ctx, arguments, opt_trans):
                 ctx.obj['interface']['option'] = opt_trans
                 ctx.obj['interface']['new_value'] = new_value
 
-                cfg_srv.write_file(ctx)
+                utils.write_file(ctx)
                 click.echo(" Done!")
 
     elif opt_trans == 'work_dir':
@@ -114,14 +116,14 @@ def cli(ctx, arguments, opt_trans):
 
         if not arguments:
             click.echo(f"Current work directory: {cur_wdir}")
-        elif arguments:
+        else:
             # Update work directory
             from pkg.config_srv import work_dir
             new_value = work_dir.update(ctx)
 
             if click.confirm(f" Replacing\n\t{cur_wdir}\n with:\n\t{new_value}\n Do you want to continue?"):
                 # Write new work directory to config file
-                from pkg.utils import cfg_srv
+                from pkg.config_srv import utils
 
                 # Add config info to context object
                 ctx.obj['interface']['config_file'] = 'cfg_main'
@@ -129,5 +131,5 @@ def cli(ctx, arguments, opt_trans):
                 ctx.obj['interface']['option'] = opt_trans
                 ctx.obj['interface']['new_value'] = new_value
 
-                cfg_srv.write_file(ctx)
+                utils.write_file(ctx)
                 click.echo(" Done!")

@@ -1,19 +1,19 @@
 """src/pkg/config_srv/ticker_symbol.py\n
-def update(ctx)"""
+def update_symbol(ctx)"""
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-def update(ctx):
+def update_symbol(ctx):
     """"""
     # Lists of current and argument symbols
     arguments = list(ctx.obj['interface']['arguments'])
     cur_sym = ctx.obj['chart_service']['chart_list'].split(' ')
 
     if ctx.obj['default']['debug']:
-        logger.debug(f"update(ctx={ctx.obj})")
+        logger.debug(f"update_symbol(ctx={ctx.obj})")
 
     extend_list, remove_list = [], []  # create lists
 
