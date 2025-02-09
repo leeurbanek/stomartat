@@ -36,7 +36,7 @@ def write_file(ctx):
     except Exception as e:
         print(e)
 
-    # import sys
-    # config_obj.write(sys.stdout)
-    with open(config_file, 'w') as cf:
-        config_obj.write(cf)
+    import sys
+    config_obj.write(sys.stdout)
+    # with open(config_file, 'w') as cf:
+    #     config_obj.write(cf)

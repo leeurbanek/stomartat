@@ -15,10 +15,10 @@ NAME
 \b
 DESCRIPTION
     The chart utility attempts to fetch online stock charts from
-    StockCharts.com.  Charts are saved to the directory specified in
-    the config settings.  If no ticker symbols are provided the default
-    symbols from the config settings are used.
-    Try 'markdata-cli config --help' for help with config settings.
+    StockCharts.com. Downloaded charts are saved to the work directory
+    specified in the config settings. If no ticker symbols (arguments)
+    are provided the default symbol list is used. If no options (period)
+    is given daily charts are downloaded.
 """)
 
 @click.argument(
@@ -52,19 +52,16 @@ def cli(ctx, arguments, opt_trans):
         ctx.obj['interface']['opt_trans'] = period_dict['daily']
 
     # Add 'arguments' to 'interface' ctx
-    if arguments:  # download arguments list
+    if arguments:  # download charts in arguments list
         ctx.obj['interface']['arguments'] = [a.upper() for a in list(arguments)]
     else:  # use chart_service chart_list
         ctx.obj['interface']['arguments'] = list(ctx.obj['chart_service']['chart_list'].split(' '))
 
     if ctx.obj['default']['debug']: logger.debug(f"cli(ctx={ctx.obj})")
 
-    # click.echo(f"Downloading: {ctx.obj['interface']['arguments']}")
     if click.confirm(f"Downloading: {ctx.obj['interface']['arguments']}, {ctx.obj['interface']['opt_trans']}\n Do you want to continue?"):
         # Download charts
         from pkg.chart_srv import client
         client.get_chart(ctx)
-    else:  # print default message
-        click.echo("Usage: stomartat-cli chart [OPTIONS] [ARGUMENTS]...")
-
-# subprocess.run(['open', filename], check=True)
+    else:  # Print default message
+        click.echo("Goodby.")

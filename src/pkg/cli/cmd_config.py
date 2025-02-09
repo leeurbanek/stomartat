@@ -44,6 +44,18 @@ DESCRIPTION
     Displays current debug status (True/False). Entering any argument
     will toggle debug state.
 """)
+# chart_srv, set the web scraper to use
+# @click.option(
+#     '--scraper', default='requests', flag_value='scraper',
+#     type=click.Choice(['requests', 'selenium']), help=f"""
+#     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+#     eiusmod tempor incididunt ut labore et dolore magna aliqua.
+# """)
+@click.option(
+    '--scraper', 'opt_trans', flag_value='scraper', help=f"""
+    Displays current debug status (True/False). Entering any argument
+    will toggle debug state.
+""")
 # app, change location of the default working directory
 @click.option(
     '--work-dir', 'opt_trans', flag_value='work_dir', help=f"""
@@ -86,7 +98,6 @@ def cli(ctx, arguments, opt_trans):
 
     elif opt_trans == 'db_lookback':
         raise NotImplementedError
-# TODO add data lookback to cmd_config
 
     elif opt_trans == 'debug':
         d_status = (f"{ctx.obj['default']['debug']}")
@@ -110,6 +121,33 @@ def cli(ctx, arguments, opt_trans):
 
                 utils.write_file(ctx)
                 click.echo(" Done!")
+
+    elif opt_trans == 'scraper':
+        cur_scrape = (f"{ctx.obj['chart_service']['scraper']}")
+
+        if not arguments:
+            click.echo(f"Current web scraper: '{cur_scrape}'")
+            click.echo("Valid options are: 'requests', 'selenium'.")
+        # Check for valid arguments
+        elif arguments[0] in ['requests', 'selenium']:
+            # Update work web scraper
+            from pkg.config_srv import scraper
+            new_value = scraper.update_scraper(ctx)
+
+            if click.confirm(f" Replacing\n\t{cur_scrape}\n with:\n\t{new_value}\n Do you want to continue?"):
+                # Write web scraper to config file
+                from pkg.config_srv import utils
+
+                # Add config info to context object
+                ctx.obj['interface']['config_file'] = 'cfg_main'
+                ctx.obj['interface']['section'] = 'default'
+                ctx.obj['interface']['option'] = opt_trans
+                ctx.obj['interface']['new_value'] = new_value
+
+                utils.write_file(ctx)
+                click.echo(" Done!")
+        else:  # try again
+            click.echo(f"'{arguments[0]}' is not a valid web scraper.")
 
     elif opt_trans == 'work_dir':
         cur_wdir = (f"{ctx.obj['default']['work_dir']}")
