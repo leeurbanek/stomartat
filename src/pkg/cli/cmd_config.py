@@ -139,8 +139,9 @@ def cli(ctx, arguments, opt_trans):
                 from pkg.config_srv import utils
 
                 # Add config info to context object
-                ctx.obj['interface']['config_file'] = 'cfg_main'
-                ctx.obj['interface']['section'] = 'default'
+                ctx.obj['interface']['config_file'] = 'cfg_chart'
+                ctx.obj['interface']['section'] = 'chart_service'
+                print(f"ctx.obj['interface']['section']: {ctx.obj['interface']['section']}")
                 ctx.obj['interface']['option'] = opt_trans
                 ctx.obj['interface']['new_value'] = new_value
 

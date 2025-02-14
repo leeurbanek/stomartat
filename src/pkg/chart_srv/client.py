@@ -30,7 +30,7 @@ def download(ctx, period, symbol):
     # Select which version of the webscraper to use
     if ctx.obj['chart_service']['scraper'] == 'requests':
         from pkg.chart_srv.scraper.my_requests import WebScraper
-    elif ctx.obj['chart_service']['scraper'] == 'requests':
+    elif ctx.obj['chart_service']['scraper'] == 'selenium':
         from pkg.chart_srv.scraper.my_selenium import WebScraper
 
     start = WebScraper(ctx, period, symbol)

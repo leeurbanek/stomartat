@@ -67,7 +67,7 @@ license = { file = "LICENSE" }
 # Note that this is a list of additional keywords, separated
 # by commas, to be used to assist searching for the distribution in a
 # larger catalog.
-keywords = ["stockmarket", "chart", "ohlc data", "technical analysis"]
+keywords = ["stockmarket","stock charts" "ohlc data", "technical analysis"]
 
 # This should be your name or the name of the organization who originally
 # authored the project, and a valid email address corresponding to the name
@@ -113,7 +113,7 @@ classifiers = [
 #
 # For an analysis of this field vs pip's requirements files see:
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
-dependencies = ["click", "colorlog", "PyQt5",]
+dependencies = ["beautifulsoup4", "click", "Pillow" "PyQt5", "selenium", "urllib3"]
 
 # List additional groups of dependencies here (e.g. development
 # dependencies). Users will be able to install these using the "extras"
@@ -125,7 +125,7 @@ dependencies = ["click", "colorlog", "PyQt5",]
 # referred to as "extras". For a more extensive definition see:
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
-dev = ["flake8"]
+dev = ["colorlog",]
 #test = ["pytest"]
 
 # List URLs that are relevant to your project
@@ -150,7 +150,7 @@ dev = ["flake8"]
 [project.scripts]
 stomartat-cli = "pkg:run_cli"
 
-# In addition to console_scripts, Setuptools supports gui_scripts, 
+# In addition to console_scripts, Setuptools supports gui_scripts,
 # which will launch a GUI application without running in a terminal window.
 [project.gui-scripts]
 stomartat-gui = "pkg:run_gui"

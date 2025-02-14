@@ -169,9 +169,10 @@ TODO
 *.code-workspace
 chromedriver
 x*.*
+beta*.*
+*.bak
+*.log
 
-#*.bak
-#*.log
 #.adblock_link
 #*.sqlite3
 #migrations/

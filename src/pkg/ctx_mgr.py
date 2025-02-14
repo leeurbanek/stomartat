@@ -1,25 +1,29 @@
+"""src/pkg/ctx_mgr.py"""
+# FIXME scraper
 import logging
 import sqlite3
 import os
 import sys
 import threading
 import time
-from configparser import ConfigParser
+# from configparser import ConfigParser
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+# from selenium import webdriver
+# from selenium.webdriver.chrome.service import Service
 
-from src import config_file
+# from src import config_file
+from pkg import config_dict
 
-
-conf_obj = ConfigParser()
-conf_obj.read(config_file)
+# conf_obj = ConfigParser()
+# conf_obj.read(config_file)
 
 logging.getLogger('selenium').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-ADBLOCK = conf_obj['Scraper']['adblock']
-DRIVER = conf_obj['Scraper']['driver']
+# ADBLOCK = conf_obj['Scraper']['adblock']
+# DRIVER = conf_obj['Scraper']['driver']
+ADBLOCK = config_dict['chart_service']['adblock']
+DRIVER = config_dict['chart_service']['driver']
 
 
 class DatabaseConnectionManager:
@@ -105,20 +109,29 @@ class SpinnerManager:
 
 class WebDriverManager:
     """Manage Selenium web driver"""
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.chrome.service import Service
+
     def __init__(self, debug: bool) -> None:
         self.debug = debug
+        # self.driver = self.webdriver.Chrome()
+        self.options = self.Options()
+        self.service = self.Service()
 
     def __enter__(self):
-        chrome_opts = webdriver.ChromeOptions()
-        chrome_opts.headless = True  # don't display browser window
-        s = Service(DRIVER)
-        self.driver = webdriver.Chrome(service=s, options=chrome_opts)
+        my_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+        self.options.add_argument('--headless=new')  # don't display browser window
+        self.options.add_argument(f'--user_agent={my_user_agent}')
+        self.driver = self.webdriver.Chrome(options= self.options, service=self.service)
+        # s = Service(DRIVER)
+        # self.driver = webdriver.Chrome(service=s, options=options)
         # Install ad blocker if used
-        if os.path.exists(ADBLOCK):
-            self.driver.install_addon(ADBLOCK)
-            # pyautogui.PAUSE = 2.5
-            # pyautogui.click()  # position browser window
-            # pyautogui.hotkey('ctrl', 'w')  # close ADBLOCK page
+        # if os.path.exists(ADBLOCK):
+        #     self.driver.install_addon(ADBLOCK)
+        #     pyautogui.PAUSE = 2.5
+        #     pyautogui.click()  # position browser window
+        #     pyautogui.hotkey('ctrl', 'w')  # close ADBLOCK page
 
         if self.debug: logger.debug(f'WebDriverManager.__enter__(session={self.driver.session_id})')
         return self.driver

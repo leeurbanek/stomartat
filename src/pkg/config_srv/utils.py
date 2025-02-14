@@ -17,8 +17,13 @@ def write_file(ctx):
     config_name = ctx.obj['interface']['config_file']
     config_file = ctx.obj['default'][config_name]
     section = ctx.obj['interface']['section']
+    print(f"section: {section}")
+
     option = ctx.obj['interface']['option']
+    print(f"option: {option}")
+
     new_value = ctx.obj['interface']['new_value']
+    print(f"new_value: {new_value}")
 
     # Create getlist() converter, used for reading ticker symbols
     config_obj = ConfigParser(
@@ -27,6 +32,7 @@ def write_file(ctx):
         )
 
     try:
+        print(f"config_file: {config_file}")
         config_obj.read(config_file)
     except Exception as e:
         print(e)
@@ -36,7 +42,7 @@ def write_file(ctx):
     except Exception as e:
         print(e)
 
-    import sys
-    config_obj.write(sys.stdout)
-    # with open(config_file, 'w') as cf:
-    #     config_obj.write(cf)
+    # import sys
+    # config_obj.write(sys.stdout)
+    with open(config_file, 'w') as cf:
+        config_obj.write(cf)
