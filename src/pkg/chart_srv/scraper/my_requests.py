@@ -1,225 +1,82 @@
-"""src/pkg/chart_srv/scraper/my_requests.py"""
-# FIXME scraper
-import io
-import logging
-import os
+"""src/pkg/chart_srv/scraper/my_requests.py\n
+Use urllib3 to get charts with the saved chart_url in the
+chart_cfg.ini file then save to work directory. The Pillow
+module is used to convert byte data to a png image.
+"""
+import logging, logging.config
 
-import urllib3
-
-# from configparser import ConfigParser
-from urllib.parse import urljoin
-from bs4 import BeautifulSoup
-from PIL import Image
-import urllib3.request
-# from requests_html import HTMLSession
-
-# from src import config_file
-from pkg import ctx_mgr
+import colorlog
 
 
-# conf_obj = ConfigParser()
-# conf_obj.read(config_file)
-
+logging.config.fileConfig(fname='src/logger.ini')
 logging.getLogger('PIL').setLevel(logging.WARNING)
-logging.getLogger('urllib3').setLevel(logging.INFO)
-logger = logging.getLogger(__name__)
-
-# BASE_URL = conf_obj['Scraper']['base_url']
-# CHART_DIR = f"{conf_obj['Default']['work_dir']}/chart"
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logger = colorlog.getLogger(__name__)
 
 
 class WebScraper:
-    """"""
-    def __init__(self, ctx, period, symbol) -> None:
-        # self.base_url = ctx.obj['chart_service']['base_url']
-        self.chart_dir = f"{ctx.obj['default']['work_dir']}chart"
-        self.debug = ctx.obj['default']['debug']
-        self.period = period
-        # self.session = HTMLSession()
+    """Fetch and save SharpCharts from stockcharts.com"""
+    def __init__(self, ctx):
+        import urllib3
+        self.chart_dir = f"{ctx['default']['work_dir']}/chart"
+        self.chart_skin = ctx['chart_service']['chart_skin']
+        self.ctx = ctx
+        self.debug = ctx['default']['debug']
+        self.period = ctx['interface']['opt_trans']
+        self.symbol = ctx['interface']['arguments']
         self.http = urllib3.PoolManager()
-        self.symbol = symbol
-        self.url = ctx.obj['chart_service']['base_url']
+        if self.chart_skin == 'dark':
+            self.chart_url = ctx.obj['chart_service']['chart_dark']
+        else:
+            self.chart_url = ctx.obj['chart_service']['chart_light']
 
-    def __repr__(self, ctx) -> str:
-        return f"{self.__class__.__name__}(ctx={ctx.obj}, symbol={self.symbol}, period={self.period})"
+    def __repr__(self):
+        return f'{self.__class__.__name__}(ctx={self.ctx})'
 
     def webscraper(self):
+        """Main entry point to Webscraper class. Directs workflow
+        of webscraper.
+        """
+        if self.debug: logger.debug(f'webscraper(self={self})')
+        self._get_img_src_convert_bytes_to_png_and_save(chart_url=self.chart_url)
+
+
+    def _get_img_src_convert_bytes_to_png_and_save(self, chart_url: str):
+        """For each period in the `ctx interface opt_trans` dictionary
+        get the chart for each symbol in the `ctx interface arguments`
+        list. Convert the bytes to a .png image then save to the chart
+        work directory.
+        """
+        import io, os
+        from PIL import Image
+
+        if self.debug: logger.debug(f'_get_img_src_convert_bytes_to_png_and_save(chart_url {type(chart_url)})')
+
+        for symbol in self.symbol:  # Update the default url with our symbol and period
+            for period in self.period:
+                new_url = self._replace_period_symbol_in_chart_url(chart_url, period, symbol)
+                # Get the chart image source convert to .png and save
+                image_src = self.http.request('GET', new_url, headers={'User-agent': 'Mozilla/5.0'})
+                image = Image.open(io.BytesIO(image_src.data)).convert('RGB')
+                image.save(os.path.join(self.chart_dir, f'{symbol}_{period[:1].lower()}.png'), 'PNG', quality=80)
+
+    def _replace_period_symbol_in_chart_url(self, chart_url: str, period: str, symbol: str):
         """"""
-        if self.debug: logger.debug(f'webscraper({self.symbol}, {self.period})')
-        if not self.debug: print(f'  fetching chart: {self.symbol}_{self.period.lower()}.png... ', end=' ')
-        with ctx_mgr.SpinnerManager(debug=self.debug):
-            # form = self._get_all_forms()[2]
-            form = self._get_all_forms()
-            details = self._get_form_details(form)
-            soup = self._submit_form(details)
-            self._get_img_src_save_imgage(soup)
-            if not self.debug: print('\b done,')
+        import time
 
-    def _get_all_forms(self):
-        """Returns all form tags found on a web page's `url` """
-
-        # res = self.session.get(self.url)
-        res = self.http.request('GET', self.url)
-        if self.debug: logger.debug(f"HTTPResponse: {res}")
-        # res.html.render()  # for javascript driven website
-        if self.debug: logger.debug(f'_get_all_forms()[2], self.url={self.url}, res={res.data}')
-
-        # soup = BeautifulSoup(res.text, "html.parser")
-        soup = BeautifulSoup(res.data, "html.parser")
-        if self.debug: logger.debug(f'_get_all_forms()[2] soup= {soup}')
-
-        return soup.find_all("form")
-
-    def _get_form_details(self, form=None):
-        """Returns action, method, and form controls (inputs, etc)"""
-        if self.debug: logger.debug(f'_get_form_details({type(form)})')
-        details = {}
-        # get the form action (requested URL)
-        action = form.attrs.get("action")
-        if action:
-            action = action.lower()
-        # get the form method (POST, GET, DELETE, etc)
-        # if not specified, GET is the default in HTML
-        method = form.attrs.get("method", "get").lower()
-        # get all form inputs
-        inputs = []
-        for input_tag in form.find_all("input"):
-            # get type of input form control
-            input_type = input_tag.attrs.get("type", "text")
-            # get name attribute
-            input_name = input_tag.attrs.get("name")
-            # get the default value of that input tag
-            input_value =input_tag.attrs.get("value", "")
-            # add everything to the list
-            inputs.append({"type": input_type, "name": input_name, "value": input_value})
-        for select in form.find_all("select"):
-            # get the name attribute
-            select_name = select.attrs.get("name")
-            # set the type as select
-            select_type = "select"
-            select_options = []
-            # the default select value
-            select_default_value = ""
-            # iterate over options and get the value of each
-            for select_option in select.find_all("option"):
-                # get the option value used to submit the form
-                option_value = select_option.attrs.get("value")
-                if option_value:
-                    select_options.append(option_value)
-                    if select_option.attrs.get("selected"):
-                        # if 'selected' attribute is set, set this option as default
-                        select_default_value = option_value
-            if not select_default_value and select_options:
-                # if the default is not set, and there are options, take the first option as default
-                select_default_value = select_options[0]
-            # add the select to the inputs list
-            inputs.append({"type": select_type, "name": select_name, "values": select_options, "value": select_default_value})
-        for textarea in form.find_all("textarea"):
-            # get the name attribute
-            textarea_name = textarea.attrs.get("name")
-            # set the type as textarea
-            textarea_type = "textarea"
-            # get the textarea value
-            textarea_value = textarea.attrs.get("value", "")
-            # add the textarea to the inputs list
-            inputs.append({"type": textarea_type, "name": textarea_name, "value": textarea_value})
-
-        # put everything into the details dictionary
-        details["action"] = action
-        details["method"] = method
-        details["inputs"] = inputs
-        return details
-
-    def _get_img_src_save_imgage(self, soup=None):
-        """"""
-        if self.debug: logger.debug(f'_get_img_src_save_imgage({type(soup)})')
-        attr = soup.find('div', attrs={'class': "ChartNotesContainer"}).find('img')
-        src = attr.get('src')
-
-        # src_content = self.session.get(f'{src}', headers={'User-agent': 'Mozilla/5.0'}).content
-        src_content = self.http.request('GET', f'{src}', headers={'User-agent': 'Mozilla/5.0'})
-
-        image_file = io.BytesIO(src_content)
-        image = Image.open(image_file).convert('RGB')
-        image.save(os.path.join(self.chart_dir, f'{self.symbol}_{self.period.lower()}.png'), 'PNG', quality=80)
-
-    def _submit_form(self, form_details=None):
-        """"""
-        if self.debug: logger.debug(f'_submit_form({type(form_details)})')
-
-        year = 1  # for setting dataRange predef field
-        if self.period == 'Weekly': year = 5
-
-        data = {}
-
-        for input_tag in form_details["inputs"]:
-            if input_tag["type"] == "hidden":  # use the default value
-                data[input_tag["name"]] = input_tag["value"]
-            elif input_tag["type"] == "select":
-                data[input_tag["name"]] = input_tag["value"]
-                data['period'] = self.period  # set period
-                data['predefChanged'] = 'true'
-                data['dataRange'] = f'predef:{year}|0|0'  # set dataRange
-                data['chartSize'] = 'Landscape'
-                data['chartSkin'] = 'night'
-                data['years'] = str(year)  # set years
-                data['months'] = '0'
-                data['overType_0'] = 'SMA'
-                data['overArgs_0'] = '50'
-                data['overType_1'] = 'SMA'
-                data['overArgs_1'] = '200'
-                data['overType_2'] = 'VOLHORIZ'
-                data['indType_0'] = 'RSI'
-                data['indArgs_0'] = '14'
-                data['indLoc_0'] = 'above'
-                data['indType_1'] = 'MACD'
-                data['indArgs_1'] = '12,26,9'
-                data['indLoc_1'] = 'below'
-            elif input_tag["type"] != "submit":
-                data[input_tag["name"]] = input_tag["value"]
-                data['useInspector'] = 'false'
-                data['fullQuote'] = 'false'
-                data['priceLabels'] = 'false'
-                data['solidCandles'] = 'false'
-                data['zoomThumbnail'] = 'false'
-                data['extendedHours'] = 'false'
-
-        # join the url with the action (form request URL)
-        url = urljoin(self.url, form_details["action"])
-        if form_details["method"] == "post":
-
-            # res = self.session.post(url, data=data)
-            res = self.http.request('POST', data=data)
-
-        elif form_details["method"] == "get":
-
-            # res = self.session.get(url, params=data)
-            res = self.http.request('GET', params=data)
-
-        # the below code is for replacing relative URLs with absolute ones
-        soup = BeautifulSoup(res.content, "html.parser")
-        for link in soup.find_all("link"):
-            try:
-                link.attrs["href"] = urljoin(url, link.attrs["href"])
-            except:
-                pass
-        for script in soup.find_all("script"):
-            try:
-                script.attrs["src"] = urljoin(url, script.attrs["src"])
-            except:
-                pass
-        for img in soup.find_all("img"):
-            try:
-                img.attrs["src"] = urljoin(url, img.attrs["src"])
-            except:
-                pass
-        for a in soup.find_all("a"):
-            try:
-                a.attrs["href"] = urljoin(url, a.attrs["href"])
-            except:
-                pass
-        return soup
+        if self.debug: logger.debug(f'_replace_period_symbol_in_chart_url({new_url}, {period}, {symbol})')
+        if period != 'Daily':
+            chart_url = chart_url.replace('p=D', 'p=W').replace('yr=1', 'yr=5')
+        new_url = chart_url.replace('AAPL', symbol)
+        # Return new_url with current epoch time parsed in.
+        return new_url[:-13]+str(round(time.time() * 1000))
 
 
 if __name__ == '__main__':
-    print(f"{__name__}.my_requests.py")
+    from test import data
+
+    start = WebScraper(ctx=data.ctx_default)
+    start.webscraper()
+
+    start = WebScraper(ctx=data.ctx_custom)
+    start.webscraper()

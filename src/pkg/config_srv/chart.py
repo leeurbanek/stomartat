@@ -1,19 +1,39 @@
-"""src/pkg/config_srv/ticker_symbol.py\n
-def update_symbol(ctx)"""
+"""src/pkg/config_srv/chart.py
+update_chart_skin(ctx)
+update_scraper(ctx)
+update_chart_list(ctx)"""
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-def update_symbol(ctx):
+def update_chart_skin(ctx):
+    """"""
+    if ctx.obj['default']['debug']:
+        logger.debug(f"update_chart_skin(ctx={ctx.obj})")
+
+    return ctx.obj['interface']['arguments'][0]
+
+
+def update_scraper(ctx):
+    """"""
+    if ctx.obj['default']['debug']:
+        logger.debug(f"update_scraper(ctx={ctx.obj}")
+
+    # Get first item in arguments tuple
+    new_value = ctx.obj['interface']['arguments'][0]
+    return new_value
+
+
+def update_chart_list(ctx):
     """"""
     # Lists of current and argument symbols
     arguments = list(ctx.obj['interface']['arguments'])
     cur_sym = ctx.obj['chart_service']['chart_list'].split(' ')
 
     if ctx.obj['default']['debug']:
-        logger.debug(f"update_symbol(ctx={ctx.obj})")
+        logger.debug(f"update_chart_list(ctx={ctx.obj})")
 
     extend_list, remove_list = [], []  # create lists
 

@@ -1,5 +1,4 @@
 """src/pkg/ctx_mgr.py"""
-# FIXME scraper
 import logging
 import sqlite3
 import os
@@ -12,7 +11,7 @@ import time
 # from selenium.webdriver.chrome.service import Service
 
 # from src import config_file
-from pkg import config_dict
+# from pkg import config_dict
 
 # conf_obj = ConfigParser()
 # conf_obj.read(config_file)
@@ -22,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 # ADBLOCK = conf_obj['Scraper']['adblock']
 # DRIVER = conf_obj['Scraper']['driver']
-ADBLOCK = config_dict['chart_service']['adblock']
-DRIVER = config_dict['chart_service']['driver']
+# ADBLOCK = config_dict['chart_service']['adblock']
+# DRIVER = config_dict['chart_service']['driver']
 
 
 class DatabaseConnectionManager:
@@ -95,7 +94,6 @@ class SpinnerManager:
 
     def __enter__(self):
         self.busy = True
-        # print(f"debug: {self.debug}")
         if self.debug: logger.debug(f"SpinnerManager(debug={self.debug}).__enter__()")
         threading.Thread(target=self.spinner_task).start()
 
@@ -108,37 +106,31 @@ class SpinnerManager:
 
 
 class WebDriverManager:
-    """Manage Selenium web driver"""
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.chrome.service import Service
-
-    def __init__(self, debug: bool) -> None:
+    """Manage Selenium WebDriver"""
+    def __init__(self, debug: bool):
+        from selenium.webdriver import FirefoxOptions
+        from selenium.webdriver import FirefoxService
+        self.options = FirefoxOptions()
+        self.service = FirefoxService()
         self.debug = debug
-        # self.driver = self.webdriver.Chrome()
-        self.options = self.Options()
-        self.service = self.Service()
 
     def __enter__(self):
-        my_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
-        self.options.add_argument('--headless=new')  # don't display browser window
-        self.options.add_argument(f'--user_agent={my_user_agent}')
-        self.driver = self.webdriver.Chrome(options= self.options, service=self.service)
-        # s = Service(DRIVER)
-        # self.driver = webdriver.Chrome(service=s, options=options)
+        from selenium.webdriver import Firefox
+        self.options.add_argument('--headless')
+        self.options.add_argument('--user_agent=Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0')
+        self.driver = Firefox(options=self.options, service=self.service)
+        if self.debug: logger.debug(f'{self.__class__.__name__}.__enter__(session={self.driver.session_id})')
         # Install ad blocker if used
         # if os.path.exists(ADBLOCK):
         #     self.driver.install_addon(ADBLOCK)
         #     pyautogui.PAUSE = 2.5
         #     pyautogui.click()  # position browser window
         #     pyautogui.hotkey('ctrl', 'w')  # close ADBLOCK page
-
-        if self.debug: logger.debug(f'WebDriverManager.__enter__(session={self.driver.session_id})')
         return self.driver
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.driver.quit()
-        if self.debug: logger.debug('WebDriverManager.__exit__()')
+        if self.debug: logger.debug(f'{self.__class__.__name__}.__exit__({self.driver.session_id})')
 
 
 if __name__ == '__main__':
