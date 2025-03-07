@@ -3,33 +3,30 @@ Use Selenium Firefox webdriver to scrape chart url from base
 url, then use urllib3 to get charts and save to work directory.
 The Pillow module is used to convert byte data to a png image.
 """
+# TODO finish get chart urls
 import logging, logging.config
-
-import colorlog
 
 from pkg.ctx_mgr import WebDriverManager
 
 
 logging.config.fileConfig(fname='src/logger.ini')
 logging.getLogger('PIL').setLevel(logging.WARNING)
-logging.getLogger('selenium').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
-logger = colorlog.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class WebScraper:
     """Fetch and save SharpCharts from stockcharts.com"""
     def __init__(self, ctx):
         self.base_url = ctx['chart_service']['base_url']
-        self.chart_url = ctx['chart_service']['chart_url']
         self.chart_dir = f"{ctx['default']['work_dir']}/chart"
-        self.ctx = ctx
+        self.chart_skin = ctx['chart_service']['chart_skin']
         self.debug = ctx['default']['debug']
         self.period = ctx['interface']['opt_trans']
         self.symbol = ctx['interface']['arguments']
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(ctx={self.ctx})'
+        return f"<class '{self.__class__.__name__}'> __dict__= {self.__dict__})"
 
     def webscraper(self):
         """Main entry point to Webscraper class. Directs workflow
@@ -38,8 +35,8 @@ class WebScraper:
         with WebDriverManager(debug=self.debug) as driver:
             if self.debug: logger.debug(f'webscraper(self={self}, driver={driver})')
             # chart_url = self._fetch_stock_chart_url(driver=driver)
-            chart_url = self.chart_url
-            self._get_img_src_convert_bytes_to_png_and_save(chart_url=chart_url)
+            # chart_url = self.chart_url
+            # self._get_img_src_convert_bytes_to_png_and_save(chart_url=chart_url)
 
     def _fetch_stock_chart_url(self, driver: object):
         """Return the stock chart url with todays timestamp.
@@ -98,7 +95,7 @@ if __name__ == '__main__':
     # start = WebScraper(ctx=data.ctx_default)
     # start.webscraper()
 
-    start = WebScraper(ctx=data.ctx_custom)
+    start = WebScraper(ctx=data.ctx)
     start.webscraper()
 
 # ===

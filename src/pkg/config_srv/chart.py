@@ -1,39 +1,22 @@
-"""src/pkg/config_srv/chart.py
-update_chart_skin(ctx)
+"""src/pkg/config_srv/chart.py\n
+update_chart_list(ctx)\n
+update_chart_skin(ctx)\n
 update_scraper(ctx)
-update_chart_list(ctx)"""
+"""
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-def update_chart_skin(ctx):
-    """"""
-    if ctx.obj['default']['debug']:
-        logger.debug(f"update_chart_skin(ctx={ctx.obj})")
-
-    return ctx.obj['interface']['arguments'][0]
-
-
-def update_scraper(ctx):
-    """"""
-    if ctx.obj['default']['debug']:
-        logger.debug(f"update_scraper(ctx={ctx.obj}")
-
-    # Get first item in arguments tuple
-    new_value = ctx.obj['interface']['arguments'][0]
-    return new_value
-
-
-def update_chart_list(ctx):
-    """"""
+def update_chart_list(ctx: dict):
+    """Set the default list of chart symbols to download."""
     # Lists of current and argument symbols
-    arguments = list(ctx.obj['interface']['arguments'])
-    cur_sym = ctx.obj['chart_service']['chart_list'].split(' ')
+    arguments = list(ctx['interface']['arguments'])
+    cur_sym = ctx['chart_service']['chart_list'].split(' ')
 
-    if ctx.obj['default']['debug']:
-        logger.debug(f"update_chart_list(ctx={ctx.obj})")
+    if ctx['default']['debug']:
+        logger.debug(f"update_chart_list(ctx={ctx}, {type(ctx)})")
 
     extend_list, remove_list = [], []  # create lists
 
@@ -55,4 +38,22 @@ def update_chart_list(ctx):
 
     # Convert symbol list to string
     new_value = ', '.join(cur_sym).replace(',', '')
+    return new_value
+
+
+def update_chart_skin(ctx: dict):
+    """Change the chart appearance: light/dark."""
+    if ctx['default']['debug']:
+        logger.debug(f"update_chart_skin(ctx={ctx}, {type(ctx)})")
+
+    return ctx['interface']['arguments'][0]
+
+
+def update_scraper(ctx: dict):
+    """Use Selenium or urllib3 for chart webscraper."""
+    if ctx['default']['debug']:
+        logger.debug(f"update_scraper(ctx={ctx}, {type(ctx)}")
+
+    # Get first item in arguments tuple
+    new_value = ctx['interface']['arguments'][0]
     return new_value

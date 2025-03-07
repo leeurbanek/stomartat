@@ -8,32 +8,31 @@ logger = logging.getLogger(__name__)
 
 
 def get_chart(ctx):
-    """"""
-    DEBUG = ctx.obj['default']['debug']
-    if DEBUG: logger.debug(f"get_chart(ctx={ctx.obj})")
+    """Check if `chart` folder exists. Direct workflow of client"""
+    DEBUG = ctx['default']['debug']
+    if DEBUG: logger.debug(f"get_chart(ctx={type(ctx)})")
 
     # check 'chart' folder exists in users 'work_dir', if not create 'chart' folder
-    Path(f"{ctx.obj['default']['work_dir']}/chart").mkdir(parents=True, exist_ok=True)
+    Path(f"{ctx['default']['work_dir']}/chart").mkdir(parents=True, exist_ok=True)
 
-    if not DEBUG: print('Begin download')
-    [download(ctx, p, s.strip(',')) for p in ctx.obj['interface']['opt_trans'] for s in ctx.obj['interface']['arguments']]
-    if not DEBUG: print('cleaning up... ', end='')
-    if not DEBUG: print('\b finished!')
-    if not DEBUG: print(f"Saved charts to '{ctx.obj['default']['work_dir']}chart'.")
+    if not DEBUG: print('\nBegin download')
+    _download(ctx=ctx)
+
+    if not DEBUG: print(' finished!')
+    if not DEBUG: print(f"Saved charts to:\n'{ctx['default']['work_dir']}chart'\n")
 
 
-def download(ctx, period, symbol):
+def _download(ctx):
     """"""
-    if ctx.obj['default']['debug']:
-        logger.debug(f"download(period={period} {type(period)}, symbol={symbol} {type(symbol)})")
+    if ctx['default']['debug']: logger.debug(f"_download(ctx={type(ctx)})")
 
     # Select which version of the webscraper to use
-    if ctx.obj['chart_service']['scraper'] == 'requests':
+    if ctx['chart_service']['scraper'] == 'requests':
         from pkg.chart_srv.scraper.my_requests import WebScraper
-    elif ctx.obj['chart_service']['scraper'] == 'selenium':
+    elif ctx['chart_service']['scraper'] == 'selenium':
         from pkg.chart_srv.scraper.my_selenium import WebScraper
 
-    start = WebScraper(ctx, period, symbol)
+    start = WebScraper(ctx)
     try:
         start.webscraper()
     except Exception as e:

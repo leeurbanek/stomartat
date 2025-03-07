@@ -8,31 +8,24 @@ from configparser import ConfigParser
 logger = logging.getLogger(__name__)
 
 
-def write_file(ctx):
+def write_file(ctx: dict):
     """Write new value to the appropriate config file"""
-    if ctx.obj['default']['debug']:
-        logger.debug(f"write_file(ctx: {ctx.obj})")
+    if ctx['default']['debug']:
+        logger.debug(f"write_file(ctx={ctx}, {type(ctx)})")
 
     # Extract some config info from context object
-    config_name = ctx.obj['interface']['config_file']
-    config_file = ctx.obj['default'][config_name]
-    section = ctx.obj['interface']['section']
-    print(f"section: {section}")
-
-    option = ctx.obj['interface']['option']
-    print(f"option: {option}")
-
-    new_value = ctx.obj['interface']['new_value']
-    print(f"new_value: {new_value}")
+    config_name = ctx['interface']['config_file']
+    config_file = ctx['default'][config_name]
+    section = ctx['interface']['section']
+    option = ctx['interface']['option']
+    new_value = ctx['interface']['new_value']
 
     # Create getlist() converter, used for reading ticker symbols
     config_obj = ConfigParser(
         allow_no_value=True,
         converters={'list': lambda x: [i.strip() for i in x.split(',')]}
         )
-
     try:
-        print(f"config_file: {config_file}")
         config_obj.read(config_file)
     except Exception as e:
         print(e)

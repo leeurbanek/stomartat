@@ -31,30 +31,26 @@ DESCRIPTION
 # chart_srv, change the chart skin: light/dark
 @click.option(
     '--chart-skin', 'opt_trans', flag_value='chart_skin', help=f"""
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    With no arguments: display the current chart color. Valid colors
+    (arguments) are dark, light.
 """)
 # data_srv, change the data lookback period of time
-@click.option(
-    '--db-lookback', 'opt_trans', flag_value='db_lookback', help=f"""
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-    enim ad minim veniam, quis nostrud exercitation ullamco laboris
-    nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
-    in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-    nulla pariatur.
-""")
+# @click.option(
+#     '--db-lookback', 'opt_trans', flag_value='db_lookback', help=f"""
+#     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+#     eiusmod tempor incididunt ut labore et dolore magna aliqua.
+# """)
 # app_default, switch the debug option on/off
 @click.option(
     '--debug', 'opt_trans', flag_value='debug', help=f"""
     Displays current debug status (True/False). Entering any argument
-    will toggle debug state.
+    toggles the debug status.
 """)
 # chart_srv, set the web scraper to use
 @click.option(
     '--scraper', 'opt_trans', flag_value='scraper', help=f"""
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    With no arguments: display the current webscraper used. Valid options
+    (arguments) are requests, selenium.
 """)
 # app_default, change location of the default working directory
 @click.option(
@@ -65,51 +61,52 @@ DESCRIPTION
     charts and historical price data are kept.
 """)
 
-@click.pass_context
+# @click.pass_context
+@click.pass_obj
 def cli(ctx, arguments, opt_trans):
     """Run config command"""
     # Add 'arguments' and 'opt_trans' to 'interface' ctx
-    ctx.obj['interface']['arguments'] = arguments
-    ctx.obj['interface']['opt_trans'] = opt_trans
+    ctx['interface']['arguments'] = arguments
+    ctx['interface']['opt_trans'] = opt_trans
 
-    if ctx.obj['default']['debug']: logger.debug(f"cli(ctx={ctx.obj})")
+    if ctx['default']['debug']: logger.debug(f"cli(ctx={ctx}, {type(ctx)})")
 
     if opt_trans == 'chart_list':
-        cur_sym = ctx.obj['chart_service']['chart_list'].split(', ')
+        cur_sym = ctx['chart_service']['chart_list'].split(', ')
 
         if not arguments:
             click.echo(f"Current chart download list: {cur_sym}")
         else:
             # Update chart symbol list
             from pkg.config_srv import chart
-            new_value = chart.update_chart_list(ctx)
+            new_value = chart.update_chart_list(ctx=ctx)
             if click.confirm(f" Replacing\n\t{cur_sym}\n with:\n\t[{new_value}]\n Do you want to continue?"):
-                ctx.obj['interface']['config_file'] = 'cfg_chart'
-                ctx.obj['interface']['section'] = 'chart_service'
-                ctx.obj['interface']['option'] = opt_trans
-                ctx.obj['interface']['new_value'] = new_value
+                ctx['interface']['config_file'] = 'cfg_chart'
+                ctx['interface']['section'] = 'chart_service'
+                ctx['interface']['option'] = opt_trans
+                ctx['interface']['new_value'] = new_value
                 # Write new symbol list to config file
                 from pkg.config_srv import utils
                 utils.write_file(ctx)
                 click.echo(" Done!")
 
     elif opt_trans == 'chart_skin':
-        cur_skin = ctx.obj['chart_service']['chart_skin']
+        cur_skin = ctx['chart_service']['chart_skin']
 
         if not arguments:
             click.echo(f"Current chart skin: {cur_skin}")
-            click.echo("Valid options are: 'dark', 'light'.")
+            click.echo(" Valid options are: dark, light.")
         # Check for valid arguments
         elif arguments[0] in ['dark', 'light']:
             # Update chart_skin light/dark
             from pkg.config_srv import chart
-            new_value = chart.update_chart_skin(ctx)
-            if click.confirm(f" Change chart skin from: {cur_skin} to {new_value}\n Do you want to continue?"):
+            new_value = chart.update_chart_skin(ctx=ctx)
+            if click.confirm(f" Changing chart skin from: {cur_skin} to {new_value}\n Do you want to continue?"):
                 # Add config info to context object
-                ctx.obj['interface']['config_file'] = 'cfg_chart'
-                ctx.obj['interface']['section'] = 'chart_service'
-                ctx.obj['interface']['option'] = opt_trans
-                ctx.obj['interface']['new_value'] = new_value
+                ctx['interface']['config_file'] = 'cfg_chart'
+                ctx['interface']['section'] = 'chart_service'
+                ctx['interface']['option'] = opt_trans
+                ctx['interface']['new_value'] = new_value
                 # Write new chart skin to config file
                 from pkg.config_srv import utils
                 utils.write_file(ctx)
@@ -121,7 +118,7 @@ def cli(ctx, arguments, opt_trans):
         raise NotImplementedError
 
     elif opt_trans == 'debug':
-        debug_status = (f"{ctx.obj['default']['debug']}")
+        debug_status = (f"{ctx['default']['debug']}")
 
         if not arguments:
             click.echo(f"Debug status: {debug_status}")
@@ -130,12 +127,12 @@ def cli(ctx, arguments, opt_trans):
             from pkg.config_srv import app_default
             new_value = app_default.update_debug(ctx=ctx)
 
-            if click.confirm(f" Change debug from: {debug_status} to {new_value}\n Do you want to continue?"):
+            if click.confirm(f" Changing debug from: {debug_status} to {new_value}\n Do you want to continue?"):
                 # Add config info to context object
-                ctx.obj['interface']['config_file'] = 'cfg_main'
-                ctx.obj['interface']['section'] = 'default'
-                ctx.obj['interface']['option'] = opt_trans
-                ctx.obj['interface']['new_value'] = new_value
+                ctx['interface']['config_file'] = 'cfg_main'
+                ctx['interface']['section'] = 'default'
+                ctx['interface']['option'] = opt_trans
+                ctx['interface']['new_value'] = new_value
 
                 # Write new debug state to config file
                 from pkg.config_srv import utils
@@ -143,7 +140,7 @@ def cli(ctx, arguments, opt_trans):
                 click.echo(" Done!")
 
     elif opt_trans == 'scraper':
-        cur_scrape = (f"{ctx.obj['chart_service']['scraper']}")
+        cur_scrape = (f"{ctx['chart_service']['scraper']}")
 
         if not arguments:
             click.echo(f"Current web scraper: '{cur_scrape}'")
@@ -153,15 +150,15 @@ def cli(ctx, arguments, opt_trans):
         elif arguments[0] in ['requests', 'selenium']:
             # Update work web scraper
             from pkg.config_srv import chart
-            new_value = chart.update_scraper(ctx)
+            new_value = chart.update_scraper(ctx=ctx)
 
             if click.confirm(f" Replacing\n\t{cur_scrape}\n with:\n\t{new_value}\n Do you want to continue?"):
                 # Add config info to context object
-                ctx.obj['interface']['config_file'] = 'cfg_chart'
-                ctx.obj['interface']['section'] = 'chart_service'
-                print(f"ctx.obj['interface']['section']: {ctx.obj['interface']['section']}")
-                ctx.obj['interface']['option'] = opt_trans
-                ctx.obj['interface']['new_value'] = new_value
+                ctx['interface']['config_file'] = 'cfg_chart'
+                ctx['interface']['section'] = 'chart_service'
+                print(f"ctx['interface']['section']: {ctx['interface']['section']}")
+                ctx['interface']['option'] = opt_trans
+                ctx['interface']['new_value'] = new_value
 
                 # Write web scraper to config file
                 from pkg.config_srv import utils
@@ -171,7 +168,7 @@ def cli(ctx, arguments, opt_trans):
             click.echo(f"'{arguments[0]}' is not a valid web scraper.")
 
     elif opt_trans == 'work_dir':
-        cur_wdir = (f"{ctx.obj['default']['work_dir']}")
+        cur_wdir = (f"{ctx['default']['work_dir']}")
 
         if not arguments:
             click.echo(f"Current work directory: {cur_wdir}")
@@ -182,10 +179,10 @@ def cli(ctx, arguments, opt_trans):
 
             if click.confirm(f" Replacing\n\t{cur_wdir}\n with:\n\t{new_value}\n Do you want to continue?"):
                 # Add config info to context object
-                ctx.obj['interface']['config_file'] = 'cfg_main'
-                ctx.obj['interface']['section'] = 'default'
-                ctx.obj['interface']['option'] = opt_trans
-                ctx.obj['interface']['new_value'] = new_value
+                ctx['interface']['config_file'] = 'cfg_main'
+                ctx['interface']['section'] = 'default'
+                ctx['interface']['option'] = opt_trans
+                ctx['interface']['new_value'] = new_value
 
                 # Write new work directory to config file
                 from pkg.config_srv import utils

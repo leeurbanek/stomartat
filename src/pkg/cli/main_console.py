@@ -34,6 +34,6 @@ class MyMultiCommand(click.MultiCommand):
 @click.pass_context
 def start_cli(ctx):
     """"""
-    ctx.obj = dict(config_dict)
+    ctx.obj = config_dict
     if ctx.obj['default']['debug']:
-        logger.debug(f"start_cli(ctx={ctx.obj}, {ctx})")
+        logger.debug(f"start_cli(ctx={ctx.obj}, {type(ctx)})")
