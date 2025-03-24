@@ -1,28 +1,13 @@
-"""src/pkg/ctx_mgr.py"""
+"""src/pkg/ctx_mgr.py\n
+class DatabaseConnectionManager - sqlite3\n
+class SpinnerManager - spinner for command line\n
+class WebDriverManager - selenium webdriver
+"""
 import logging
-import sqlite3
 import os
-import sys
-import threading
-import time
-# from configparser import ConfigParser
 
-# from selenium import webdriver
-# from selenium.webdriver.chrome.service import Service
 
-# from src import config_file
-# from pkg import config_dict
-
-# conf_obj = ConfigParser()
-# conf_obj.read(config_file)
-
-logging.getLogger('selenium').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
-
-# ADBLOCK = conf_obj['Scraper']['adblock']
-# DRIVER = conf_obj['Scraper']['driver']
-# ADBLOCK = config_dict['chart_service']['adblock']
-# DRIVER = config_dict['chart_service']['driver']
 
 
 class DatabaseConnectionManager:
@@ -40,6 +25,8 @@ class DatabaseConnectionManager:
     -------
     An Sqlite3 connection object.\n
     """
+    import sqlite3
+
     def __init__(self, db_path='test.db', mode='memory'):
         self.db_path = db_path
         self.mode = mode
@@ -47,16 +34,16 @@ class DatabaseConnectionManager:
     def __enter__(self):
         logger.debug('DatabaseConnectionManager.__enter__()')
         try:
-            self.connection = sqlite3.connect(
+            self.connection = self.sqlite3.connect(
                 f'file:{os.path.abspath(self.db_path)}?mode={self.mode}',
-                # detect_types=sqlite3.PARSE_DECLTYPES, uri=True
-                detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES, uri=True
+                # detect_types=self.sqlite3.PARSE_DECLTYPES, uri=True
+                detect_types=self.sqlite3.PARSE_DECLTYPES | self.sqlite3.PARSE_COLNAMES, uri=True
             )
             self.cursor = self.connection.cursor()
             logger.debug(f"connected '{os.path.basename(self.db_path)}', mode: {self.mode}")
             # return self.cursor
             return self
-        except sqlite3.Error as e:
+        except self.sqlite3.Error as e:
             print(f'{e}: {self.db_path}')
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -71,6 +58,9 @@ class DatabaseConnectionManager:
 
 class SpinnerManager:
     """Manage a simple spinner object"""
+    import sys
+    import threading
+    from time import sleep
     busy = False
     delay = 0.2
 
@@ -86,39 +76,47 @@ class SpinnerManager:
 
     def spinner_task(self):
         while self.busy:
-            sys.stdout.write(next(self.spinner_generator))
-            sys.stdout.flush()
-            time.sleep(self.delay)
-            sys.stdout.write('\b')
-            sys.stdout.flush()
+            self.sys.stdout.write(next(self.spinner_generator))
+            self.sys.stdout.flush()
+            self.sleep(self.delay)
+            self.sys.stdout.write('\b')
+            self.sys.stdout.flush()
 
     def __enter__(self):
         self.busy = True
         if self.debug: logger.debug(f"SpinnerManager(debug={self.debug}).__enter__()")
-        threading.Thread(target=self.spinner_task).start()
+        self.threading.Thread(target=self.spinner_task).start()
 
     def __exit__(self, exception, value, tb):
         self.busy = False
-        time.sleep(self.delay)
+        self.sleep(self.delay)
         if self.debug: logger.debug(f"SpinnerManager(debug={self.debug}).__exit__()")
         if exception is not None:
             return False
 
 
 class WebDriverManager:
-    """Manage Selenium WebDriver"""
+    """Manage Selenium WebDriver.\n
+    Put Firefox geckodriver somewhere on sysetm path.
+    """
+    # from selenium.webdriver import Chrome
+    # from selenium.webdriver import ChromeOptions
+    from selenium.webdriver import Firefox
+    from selenium.webdriver import FirefoxOptions
+
     def __init__(self, debug: bool):
-        from selenium.webdriver import FirefoxOptions
-        from selenium.webdriver import FirefoxService
-        self.options = FirefoxOptions()
-        self.service = FirefoxService()
         self.debug = debug
+        # self.opt = self.ChromeOptions()
+        self.opt = self.FirefoxOptions()
+        self.opt.add_argument("--headless=new")
+        # self.opt.add_argument("--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'")
+        self.opt.add_argument("--user-agent='Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0'")
+        # self.opt.page_load_strategy = "eager"
+        self.opt.page_load_strategy = "none"
 
     def __enter__(self):
-        from selenium.webdriver import Firefox
-        self.options.add_argument('--headless')
-        self.options.add_argument('--user_agent=Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0')
-        self.driver = Firefox(options=self.options, service=self.service)
+        # self.driver = self.Chrome(options=self.opt)
+        self.driver = self.Firefox(options=self.opt)
         if self.debug: logger.debug(f'{self.__class__.__name__}.__enter__(session={self.driver.session_id})')
         # Install ad blocker if used
         # if os.path.exists(ADBLOCK):
@@ -131,39 +129,3 @@ class WebDriverManager:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.driver.quit()
         if self.debug: logger.debug(f'{self.__class__.__name__}.__exit__({self.driver.session_id})')
-
-
-if __name__ == '__main__':
-    import unittest
-
-    class SpinnerManagerTest(unittest.TestCase):
-        def test_spinner_manager(self):
-            with SpinnerManager(debug=True) as spinner:
-                time.sleep(2)  # some long-running operation
-
-
-    class ContextManagerTest(unittest.TestCase):
-        def setUp(self) -> None:
-            self.db_table = 'data'
-            self.rows = [
-                ('D1','F1'), ('D2','F2'), ('D3','F3'),
-            ]
-
-        def test_db_ctx_mgr_in_memory_mode(self):
-            with DatabaseConnectionManager() as db:
-                db.cursor.execute(f'''
-                    CREATE TABLE {self.db_table} (
-                        Date    DATE        NOT NULL,
-                        Field   INTEGER     NOT NULL,
-                        PRIMARY KEY (Date)
-                    );
-                ''')
-                db.cursor.executemany(f'INSERT INTO {self.db_table} VALUES (?,?)', self.rows)
-                try:
-                    sql = db.cursor.execute(f"SELECT Field FROM {self.db_table} WHERE ROWID IN (SELECT max(ROWID) FROM {self.db_table});")
-                    result = sql.fetchone()
-                except Exception as e:
-                    print(f"{e}")
-                self.assertEqual(result, ('F3',))
-
-    unittest.main()

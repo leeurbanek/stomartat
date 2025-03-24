@@ -7,7 +7,7 @@ import click
 logger = logging.getLogger(__name__)
 
 
-@click.command('chart', short_help="Fetch online stockcharts", help=
+@click.command('chart', short_help="Fetch online stock charts", help=
 """
 \b
 NAME
@@ -38,6 +38,7 @@ DESCRIPTION
 @click.pass_obj
 def cli(ctx, arguments, opt_trans):
     """Run chart command"""
+    ctx['interface']['command'] = 'chart'
 
     # Put option flag_value into dictionary of lists
     period_dict = {
@@ -63,6 +64,6 @@ def cli(ctx, arguments, opt_trans):
     if click.confirm(f"Downloading: {ctx['interface']['arguments']}, {ctx['interface']['opt_trans']}\n Do you want to continue?"):
         # Download charts
         from pkg.chart_srv import client
-        client.get_chart(ctx)
+        client.get_stockchart(ctx)
     else:  # Print default message
         click.echo("Goodby.")
