@@ -92,7 +92,8 @@ class WebScraper:
         canvas_element = WebDriverWait(driver=driver, timeout=10).until(
             EC.presence_of_element_located(
                 (
-                    # By.XPATH, "/html/body/div/div[1]/div[2]/main/div[2]/div[1]/div/div/svg[1]")
+                    # By.XPATH,
+                    # "/html/body/div/div[1]/div[2]/main/div[2]/div[1]/div/div/svg[1]")
                     By.CSS_SELECTOR,
                     "svg.main-svg:nth-child(1)",
                 )
@@ -109,4 +110,4 @@ class WebScraper:
             logger.debug(f"_save_png_image(image_src={type(image_src)}, period={period})")
 
         png_image = Image.open(BytesIO(image_src)).convert("RGB")
-        png_image.save(os.path.join(self.heatmap_dir, f"S&P500_{period.lower()}.png"), "PNG", quality=80)
+        png_image.save(os.path.join(self.heatmap_dir, f"SP500_{period.lower()}.png"), "PNG", quality=80)

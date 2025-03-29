@@ -17,7 +17,7 @@ DESCRIPTION
     single blank space, to the applicable configuration file. Use
     absolute paths for directories, etc. Quotes are not necessary.
 """)
-
+# TODO cleanup options
 @click.argument('arguments', nargs=-1, default=None, required=False, type=str)
 # chart_srv, change the default list of charts to download
 @click.option(

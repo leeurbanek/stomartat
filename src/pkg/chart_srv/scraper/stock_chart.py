@@ -17,12 +17,11 @@ from PIL import Image
 # from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (
-    ElementClickInterceptedException,
-    ElementNotInteractableException,
-    TimeoutException,
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.common.exceptions import (ElementClickInterceptedException,
+                                        ElementNotInteractableException,
+                                        TimeoutException,
 )
 
 logging.config.fileConfig(fname="src/logger.ini")
@@ -53,8 +52,12 @@ class WebScraper:
         # opt = ChromeOptions()
         opt = FirefoxOptions()
         opt.add_argument("--headless=new")
-        # opt.add_argument("--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'")
-        opt.add_argument("--user-agent='Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0'")
+        # opt.add_argument(
+        #     "--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'"
+        # )
+        opt.add_argument(
+            "--user-agent='Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0'"
+        )
         # opt.page_load_strategy = "eager"
         opt.page_load_strategy = "none"
         # driver = Chrome(options=opt)
@@ -68,7 +71,10 @@ class WebScraper:
             self._click_button(driver=driver)
             self.url = self._get_chart_url(driver=driver)
             self._fetch_stockchart(url=self.url)
-        except (ElementClickInterceptedException, ElementNotInteractableException, TimeoutException, Exception) as e:
+        except (ElementClickInterceptedException,
+                ElementNotInteractableException,
+                TimeoutException,
+                Exception) as e:
             logger.debug(f"*** ERROR *** {e}")
         finally:
             driver.quit()
@@ -76,10 +82,12 @@ class WebScraper:
     def _click_button(self, driver: object):
         """click refresh chart"""
         button = WebDriverWait(driver=driver, timeout=10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div[2]/div[5]/div[2]/div[1]/div[1]/div[3]/button[1]")
-                # EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div[2]/div[6]/div[2]/div[1]/div[1]/div[3]/button[1]")
-            )
+            EC.element_to_be_clickable((
+                # By.XPATH,
+                # "/html/body/div[1]/div[2]/div[5]/div[2]/div[1]/div[1]/div[3]/button[1]"
+                By.XPATH,
+                "/html/body/div[1]/div[2]/div[6]/div[2]/div[1]/div[1]/div[3]/button[1]"
+            ))
         )
         loc = button.location_once_scrolled_into_view
         logger.debug(f"button: {button}, loc: {loc}")
@@ -95,13 +103,17 @@ class WebScraper:
                 mod_url = self._modify_query_period_and_symbol(period=period, symbol=symbol)
                 self._get_img_src_convert_bytes_to_png_and_save(url=mod_url, period=period, symbol=symbol)
 
-    # TODO handle case when url is None
+    # TODO manual input url
     def _get_chart_url(self, driver: object) -> str:
         """modify base_url, set size, color, and RSI indicator"""
         sleep(1)
         img_element = WebDriverWait(driver=driver, timeout=10).until(
-            # EC.presence_of_element_located((By.CSS_SELECTOR, '#chart-image'))
-            EC.presence_of_element_located((By.XPATH, '//*[@id="chart-image"]'))
+            EC.presence_of_element_located((
+                By.CSS_SELECTOR,
+                "#chart-image"
+                # By.XPATH,
+                # '//*[@id="chart-image"]'
+            ))
         )
         loc = img_element.location_once_scrolled_into_view
         logger.debug(f"img_element: {img_element}, loc: {loc}")
@@ -143,7 +155,10 @@ class WebScraper:
     def _set_color_dark(self, driver: object):
         """set color to night"""
         color_element = WebDriverWait(driver=driver, timeout=10).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="chart-settings-color-scheme-menu"]'))
+            EC.element_to_be_clickable((
+                By.XPATH,
+                '//*[@id="chart-settings-color-scheme-menu"]'
+            ))
         )
         loc = color_element.location_once_scrolled_into_view
         logger.debug(f"color_element: {color_element}, loc: {loc}")
@@ -155,8 +170,12 @@ class WebScraper:
     def _set_indicator(self, driver: object):
         """set indicator overlay toRSI"""
         indicator_element = WebDriverWait(driver=driver, timeout=10).until(
-            # EC.element_to_be_clickable((By.CSS_SELECTOR, "#indicator-menu-1")
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="indicator-menu-1"]'))
+            EC.element_to_be_clickable((
+                By.CSS_SELECTOR,
+                "#indicator-menu-1"
+                # By.XPATH,
+                # '//*[@id="indicator-menu-1"]'
+            ))
         )
         loc = indicator_element.location_once_scrolled_into_view
         logger.debug(f"indicator_element: {indicator_element}, loc: {loc}")
@@ -168,7 +187,10 @@ class WebScraper:
     def _set_chart_size(self, driver: object):
         """set chart size to Landscape"""
         size_element = WebDriverWait(driver=driver, timeout=10).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="chart-settings-chart-size-menu"]'))
+            EC.element_to_be_clickable((
+                By.XPATH,
+                '//*[@id="chart-settings-chart-size-menu"]'
+            ))
         )
         loc = size_element.location_once_scrolled_into_view
         logger.debug(f"size_element: {size_element}, loc: {loc}")

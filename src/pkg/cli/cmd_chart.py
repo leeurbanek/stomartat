@@ -15,10 +15,9 @@ NAME
 \b
 DESCRIPTION
     The chart utility fetches candle stick charts from StockCharts.com.
-    Downloaded charts are saved to the work directory specified in
-    the config settings. If no ticker symbols (arguments) are provided
-    the default symbol list is used. If no options (period) is given
-    daily charts are downloaded.
+    Downloaded charts are saved to the work directory. If no ticker
+    symbols (arguments) are provided the default symbol list is used.
+    If no option (period) is given daily charts are downloaded.
 """)
 
 @click.argument(
