@@ -19,9 +19,10 @@ from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
-from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        ElementNotInteractableException,
-                                        TimeoutException,
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+    TimeoutException,
 )
 
 logging.config.fileConfig(fname="src/logger.ini")
@@ -83,10 +84,8 @@ class WebScraper:
         """click refresh chart"""
         button = WebDriverWait(driver=driver, timeout=10).until(
             EC.element_to_be_clickable((
-                # By.XPATH,
-                # "/html/body/div[1]/div[2]/div[5]/div[2]/div[1]/div[1]/div[3]/button[1]"
-                By.XPATH,
-                "/html/body/div[1]/div[2]/div[6]/div[2]/div[1]/div[1]/div[3]/button[1]"
+                By.XPATH, "/html/body/div[1]/div[2]/div[5]/div[2]/div[1]/div[1]/div[3]/button[1]"
+                # By.XPATH, "/html/body/div[1]/div[2]/div[6]/div[2]/div[1]/div[1]/div[3]/button[1]"
             ))
         )
         loc = button.location_once_scrolled_into_view

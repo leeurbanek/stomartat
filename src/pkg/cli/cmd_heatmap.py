@@ -35,7 +35,7 @@ def cli(ctx, arguments):
     if arguments:  # download heatmaps in arguments list
         ctx['interface']['arguments'] = sorted([a.upper() for a in list(arguments)])
     else:  # use chart_service heat_map list
-        ctx['interface']['arguments'] = sorted(list(ctx['chart_service']['heat_map'].split(' ')))
+        ctx['interface']['arguments'] = sorted(list(ctx['chart_service']['heatmap_list'].split(' ')))
 
     if ctx['default']['debug']: logger.debug(f'cli(ctx={ctx} {type(ctx)})')
 
