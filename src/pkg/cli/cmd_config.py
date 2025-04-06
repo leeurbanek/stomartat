@@ -28,12 +28,6 @@ DESCRIPTION
     removed from the chart download list, if the arguments are not
     in the current list then those symbols will be added to the list.
 """)
-# chart_srv, change the chart skin: light/dark
-@click.option(
-    '--chart-skin', 'opt_trans', flag_value='chart_skin', help=f"""
-    With no arguments: display the current chart color. Valid colors
-    (arguments) are dark, light.
-""")
 # data_srv, change the data lookback period of time
 # @click.option(
 #     '--db-lookback', 'opt_trans', flag_value='db_lookback', help=f"""
@@ -46,12 +40,21 @@ DESCRIPTION
     Displays current debug status (True/False). Entering any argument
     toggles the debug status.
 """)
-# chart_srv, set the web scraper to use
+# chart_srv, change the default list of heatmaps to download
 @click.option(
-    '--scraper', 'opt_trans', flag_value='scraper', help=f"""
-    With no arguments: display the current webscraper used. Valid options
-    (arguments) are requests, selenium.
+    '--heatmap-list', 'opt_trans', flag_value='heatmap_list', help=f"""
+    When used without arguments the current list of heatmaps to
+    download is displayed. Used with one or more arguments: if the
+    arguments are items in the current list those items will be
+    removed from the heatmap download list, if the arguments are not
+    in the current list then those items will be added to the list.
 """)
+# # chart_srv, set the webdriver to use
+# @click.option(
+#     '--webdriver', 'opt_trans', flag_value='webdriver', help=f"""
+#     With no arguments: display the current webdriver used. Valid options
+#     (arguments) are chrome, gecko.
+# """)
 # app_default, change location of the default working directory
 @click.option(
     '--work-dir', 'opt_trans', flag_value='work_dir', help=f"""
@@ -72,47 +75,22 @@ def cli(ctx, arguments, opt_trans):
     if ctx['default']['debug']: logger.debug(f"cli(ctx={ctx}, {type(ctx)})")
 
     if opt_trans == 'chart_list':
-        cur_sym = ctx['chart_service']['chart_list'].split(', ')
+        cur_sym = ctx['chart_service'][opt_trans].split(', ')
 
         if not arguments:
             click.echo(f"Current chart download list: {cur_sym}")
         else:
             # Update chart symbol list
-            from pkg.config_srv import chart
-            new_value = chart.update_chart_list(ctx=ctx)
+            from pkg.config_srv import utils
+            new_value = utils.update_list(ctx=ctx)
             if click.confirm(f" Replacing\n\t{cur_sym}\n with:\n\t[{new_value}]\n Do you want to continue?"):
                 ctx['interface']['config_file'] = 'cfg_chart'
                 ctx['interface']['section'] = 'chart_service'
                 ctx['interface']['option'] = opt_trans
                 ctx['interface']['new_value'] = new_value
                 # Write new symbol list to config file
-                from pkg.config_srv import utils
                 utils.write_file(ctx)
                 click.echo(" Done!")
-
-    elif opt_trans == 'chart_skin':
-        cur_skin = ctx['chart_service']['chart_skin']
-
-        if not arguments:
-            click.echo(f"Current chart skin: {cur_skin}")
-            click.echo(" Valid options are: dark, light.")
-        # Check for valid arguments
-        elif arguments[0] in ['dark', 'light']:
-            # Update chart_skin light/dark
-            from pkg.config_srv import chart
-            new_value = chart.update_chart_skin(ctx=ctx)
-            if click.confirm(f" Changing chart skin from: {cur_skin} to {new_value}\n Do you want to continue?"):
-                # Add config info to context object
-                ctx['interface']['config_file'] = 'cfg_chart'
-                ctx['interface']['section'] = 'chart_service'
-                ctx['interface']['option'] = opt_trans
-                ctx['interface']['new_value'] = new_value
-                # Write new chart skin to config file
-                from pkg.config_srv import utils
-                utils.write_file(ctx)
-                click.echo(" Done!")
-        else:  # try again
-            click.echo(f"'{arguments[0]}' is not a valid web scraper.")
 
     elif opt_trans == 'db_lookback':
         raise NotImplementedError
@@ -139,33 +117,59 @@ def cli(ctx, arguments, opt_trans):
                 utils.write_file(ctx)
                 click.echo(" Done!")
 
-    elif opt_trans == 'scraper':
-        cur_scrape = (f"{ctx['chart_service']['scraper']}")
+    elif opt_trans == 'heatmap_list':
+        cur_list = ctx['chart_service'][opt_trans].split(', ')
 
         if not arguments:
-            click.echo(f"Current web scraper: '{cur_scrape}'")
-            click.echo("Valid options are: 'requests', 'selenium'.")
-
-        # Check for valid arguments
-        elif arguments[0] in ['requests', 'selenium']:
-            # Update work web scraper
-            from pkg.config_srv import chart
-            new_value = chart.update_scraper(ctx=ctx)
-
-            if click.confirm(f" Replacing\n\t{cur_scrape}\n with:\n\t{new_value}\n Do you want to continue?"):
-                # Add config info to context object
-                ctx['interface']['config_file'] = 'cfg_chart'
-                ctx['interface']['section'] = 'chart_service'
-                print(f"ctx['interface']['section']: {ctx['interface']['section']}")
-                ctx['interface']['option'] = opt_trans
-                ctx['interface']['new_value'] = new_value
-
-                # Write web scraper to config file
+            click.echo(f"Current heatmap download list: {cur_list}")
+        else:
+            # Check arguments are valid
+            valid_args = ['1D','1W','1M','3M','6M','YTD','1Y','3Y','5Y','10Y']
+            if set(arguments).issubset(valid_args):
+                # Update heatmap period list
                 from pkg.config_srv import utils
-                utils.write_file(ctx)
-                click.echo(" Done!")
-        else:  # try again
-            click.echo(f"'{arguments[0]}' is not a valid web scraper.")
+                new_value = utils.update_list(ctx=ctx)
+                if click.confirm(f" Replacing\n\t{cur_list}\n with:\n\t[{new_value}]\n Do you want to continue?"):
+                    ctx['interface']['config_file'] = 'cfg_chart'
+                    ctx['interface']['section'] = 'chart_service'
+                    ctx['interface']['option'] = opt_trans
+                    ctx['interface']['new_value'] = new_value
+                    # Write new symbol list to config file
+                    utils.write_file(ctx)
+                    click.echo(" Done!")
+            else:
+                click.echo(f"Valid arguments are:\n  {valid_args}")
+
+    # elif opt_trans == 'scraper':
+    #     cur_scrape = (f"{ctx['chart_service']['scraper']}")
+
+    #     if not arguments:
+    #         click.echo(f"Current web scraper: '{cur_scrape}'")
+    #         click.echo("Valid options are: 'requests', 'selenium'.")
+
+    #     # Check for valid arguments
+    #     elif arguments[0] in ['requests', 'selenium']:
+    #         # Update work web scraper
+    #         from pkg.config_srv import chart
+    #         new_value = chart.update_scraper(ctx=ctx)
+
+    #         if click.confirm(f" Replacing\n\t{cur_scrape}\n with:\n\t{new_value}\n Do you want to continue?"):
+    #             # Add config info to context object
+    #             ctx['interface']['config_file'] = 'cfg_chart'
+    #             ctx['interface']['section'] = 'chart_service'
+    #             print(f"ctx['interface']['section']: {ctx['interface']['section']}")
+    #             ctx['interface']['option'] = opt_trans
+    #             ctx['interface']['new_value'] = new_value
+
+    #             # Write web scraper to config file
+    #             from pkg.config_srv import utils
+    #             utils.write_file(ctx)
+    #             click.echo(" Done!")
+    #     else:  # try again
+    #         click.echo(f"'{arguments[0]}' is not a valid web scraper.")
+
+    elif opt_trans == 'webdriver':
+        raise NotImplementedError
 
     elif opt_trans == 'work_dir':
         cur_wdir = (f"{ctx['default']['work_dir']}")

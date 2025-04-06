@@ -1,4 +1,5 @@
 """src/pkg/utils/cfg_srv\n
+update_list()\n
 write_file()"""
 import logging
 
@@ -6,6 +7,40 @@ from configparser import ConfigParser
 
 
 logger = logging.getLogger(__name__)
+
+
+def update_list(ctx: dict):
+    """Set the default list of heatmaps to download."""
+    # Get arguments and opt_trans
+    arguments = list(ctx['interface']['arguments'])
+    opt_trans = ctx['interface']['opt_trans']
+
+    cur_list = ctx['chart_service'][opt_trans].split(' ')
+
+    if ctx['default']['debug']:
+        logger.debug(f"update_heatmap_list(ctx={ctx}, {type(ctx)})")
+
+    extend_list, remove_list = [], []  # create lists
+
+    # Add symbols to extend_list/remove_list
+    for item in arguments:
+        item = item.upper().strip()
+
+        if item in cur_list:
+            remove_list.append(item)
+        else:
+            extend_list.append(item)
+
+    # Extend/remove items in symbol_list
+    if extend_list:
+        cur_list.extend(extend_list)
+    if remove_list:
+        for r in remove_list:
+            cur_list.remove(r)
+
+    # Convert symbol list to string
+    new_value = ', '.join(cur_list).replace(',', '')
+    return new_value
 
 
 def write_file(ctx: dict):
