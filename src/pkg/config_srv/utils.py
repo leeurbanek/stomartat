@@ -1,4 +1,6 @@
 """src/pkg/utils/cfg_srv\n
+get_arg_value()\n
+update_debug()\n
 update_list()\n
 write_file()"""
 import logging
@@ -7,6 +9,25 @@ from configparser import ConfigParser
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_arg_value(ctx: dict)->str:
+    """Return first value from arguments tuple."""
+    if ctx['default']['debug']:
+        logger.debug(f"get_arg_value(ctx={ctx}, {type(ctx)}")
+
+    new_value = ctx['interface']['arguments'][0]
+    return new_value
+
+
+def update_debug(ctx: dict):
+    """Enter any character to toggle debug (logging) status."""
+    if ctx['default']['debug']:
+        logger.debug(f"update_debug(ctx={ctx}, {type(ctx)}")
+
+    # Toggle current boolean value
+    new_value = not ctx['default']['debug']
+    return new_value
 
 
 def update_list(ctx: dict):
@@ -52,7 +73,7 @@ def write_file(ctx: dict):
     config_name = ctx['interface']['config_file']
     config_file = ctx['default'][config_name]
     section = ctx['interface']['section']
-    option = ctx['interface']['option']
+    option = ctx['interface']['opt_trans']
     new_value = ctx['interface']['new_value']
 
     # Create getlist() converter, used for reading ticker symbols
