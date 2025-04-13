@@ -10,22 +10,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-# TODO combine stockchart and heatmap
-def get_stockchart(ctx):
-    """Check if `chart` folder exists. Direct workflow of client"""
-    DEBUG = ctx['default']['debug']
-    if DEBUG: logger.debug(f"get_stockchart(ctx={type(ctx)})")
-
-    # check 'chart' folder exists in users 'work_dir', if not create 'chart' folder
-    Path(f"{ctx['default']['work_dir']}/chart").mkdir(parents=True, exist_ok=True)
-
-    if not DEBUG: print('\nBegin download')
-    _download(ctx=ctx)
-
-    if not DEBUG: print(' finished!')
-    if not DEBUG: print(f"Saved charts to:\n'{ctx['default']['work_dir']}chart'\n")
-
-
+# TODO combine get_heatmap and get_stockchart
 def get_heatmap(ctx):
     """Check if `heatmap` folder exists. Direct workflow of client"""
     DEBUG = ctx['default']['debug']
@@ -39,6 +24,21 @@ def get_heatmap(ctx):
 
     if not DEBUG: print(' finished!')
     if not DEBUG: print(f"Saved heatmaps to:\n'{ctx['default']['work_dir']}heatmap'\n")
+
+
+def get_stockchart(ctx):
+    """Check if `chart` folder exists. Direct workflow of client"""
+    DEBUG = ctx['default']['debug']
+    if DEBUG: logger.debug(f"get_stockchart(ctx={type(ctx)})")
+
+    # check 'chart' folder exists in users 'work_dir', if not create 'chart' folder
+    Path(f"{ctx['default']['work_dir']}/chart").mkdir(parents=True, exist_ok=True)
+
+    if not DEBUG: print('\nBegin download')
+    _download(ctx=ctx)
+
+    if not DEBUG: print(' finished!')
+    if not DEBUG: print(f"Saved charts to:\n'{ctx['default']['work_dir']}chart'\n")
 
 
 def _download(ctx):

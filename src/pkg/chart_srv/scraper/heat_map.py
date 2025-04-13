@@ -12,7 +12,7 @@ from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from PIL import Image
 
-# TODO add Chrome/Firefox option to config
+# TODO add Chrome/Firefox option
 # from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.webdriver.common.by import By

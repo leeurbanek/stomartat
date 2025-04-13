@@ -14,6 +14,7 @@ import urllib3
 
 from PIL import Image
 
+# TODO add Chrome/Firefox option
 # from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.webdriver.common.by import By
@@ -66,11 +67,11 @@ class WebScraper:
         driver.get(self.base_url)
 
         try:
-            self._set_chart_size(driver=driver)
-            self._set_color_dark(driver=driver)
-            self._set_indicator(driver=driver)
-            self._click_button(driver=driver)
-            self.url = self._get_chart_url(driver=driver)
+            self._set_chart_size_landscape(driver=driver)
+            self._set_chart_color_dark(driver=driver)
+            self._set_indicator_RSI(driver=driver)
+            self._click_update_button(driver=driver)
+            self.url = self._get_chart_src_attribute(driver=driver)
             self._fetch_stockchart(url=self.url)
         except (ElementClickInterceptedException,
                 ElementNotInteractableException,
@@ -80,7 +81,7 @@ class WebScraper:
         finally:
             driver.quit()
 
-    def _click_button(self, driver: object):
+    def _click_update_button(self, driver: object):
         """click refresh chart"""
         button = WebDriverWait(driver=driver, timeout=10).until(
             EC.element_to_be_clickable((
@@ -102,22 +103,30 @@ class WebScraper:
                 mod_url = self._modify_query_period_and_symbol(period=period, symbol=symbol)
                 self._get_img_src_convert_bytes_to_png_and_save(url=mod_url, period=period, symbol=symbol)
 
-    # TODO manual input url
-    def _get_chart_url(self, driver: object) -> str:
-        """modify base_url, set size, color, and RSI indicator"""
+    def _get_chart_src_attribute(self, driver: object) -> str:
+        """modify base_url, set size, color, and RSI indicator, return modified base_url"""
         sleep(1)
-        img_element = WebDriverWait(driver=driver, timeout=10).until(
-            EC.presence_of_element_located((
-                By.CSS_SELECTOR,
-                "#chart-image"
-                # By.XPATH,
-                # '//*[@id="chart-image"]'
-            ))
-        )
-        loc = img_element.location_once_scrolled_into_view
-        logger.debug(f"img_element: {img_element}, loc: {loc}")
+        try:
+            img_element = WebDriverWait(driver=driver, timeout=10).until(
+                EC.presence_of_element_located((
+                    By.CSS_SELECTOR,
+                    "#chart-image"
+                    # By.XPATH,
+                    # '//*[@id="chart-image"]'
+                ))
+            )
+            loc = img_element.location_once_scrolled_into_view
+            if self.debug:
+                logger.debug(f"img_element: {img_element}, loc: {loc}")
+            return img_element.get_attribute("src")
 
-        return img_element.get_attribute("src")
+        except Exception as e:
+            logger.debug(f"an error occured while getting chart source url: {e}")
+            url = input(" Input chart source url manually or press enter to exit:")
+            if url:
+                return url
+            else:
+                SystemExit
 
     def _get_img_src_convert_bytes_to_png_and_save(self, url: str, period: str, symbol: str):
         """Get the chart image source and convert the bytes to
@@ -151,7 +160,7 @@ class WebScraper:
 
         return urlunparse(parsed_url._replace(query=encoded_params))
 
-    def _set_color_dark(self, driver: object):
+    def _set_chart_color_dark(self, driver: object):
         """set color to night"""
         color_element = WebDriverWait(driver=driver, timeout=10).until(
             EC.element_to_be_clickable((
@@ -166,7 +175,7 @@ class WebScraper:
         color.select_by_value("night")
         logger.debug(f"color: {color}")
 
-    def _set_indicator(self, driver: object):
+    def _set_indicator_RSI(self, driver: object):
         """set indicator overlay toRSI"""
         indicator_element = WebDriverWait(driver=driver, timeout=10).until(
             EC.element_to_be_clickable((
@@ -183,7 +192,7 @@ class WebScraper:
         indicator.select_by_value("RSI")
         logger.debug(f"indicator: {indicator}")
 
-    def _set_chart_size(self, driver: object):
+    def _set_chart_size_landscape(self, driver: object):
         """set chart size to Landscape"""
         size_element = WebDriverWait(driver=driver, timeout=10).until(
             EC.element_to_be_clickable((
