@@ -6,6 +6,8 @@ class WebDriverManager - selenium webdriver
 import logging
 import os
 
+from pkg import DEBUG
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +34,7 @@ class DatabaseConnectionManager:
         self.mode = mode
 
     def __enter__(self):
-        logger.debug('DatabaseConnectionManager.__enter__()')
+        if DEBUG: logger.debug('DatabaseConnectionManager.__enter__()')
         try:
             self.connection = self.sqlite3.connect(
                 f'file:{os.path.abspath(self.db_path)}?mode={self.mode}',
@@ -40,14 +42,14 @@ class DatabaseConnectionManager:
                 detect_types=self.sqlite3.PARSE_DECLTYPES | self.sqlite3.PARSE_COLNAMES, uri=True
             )
             self.cursor = self.connection.cursor()
-            logger.debug(f"connected '{os.path.basename(self.db_path)}', mode: {self.mode}")
+            if DEBUG: logger.debug(f"connected '{os.path.basename(self.db_path)}', mode: {self.mode}")
             # return self.cursor
             return self
         except self.sqlite3.Error as e:
             print(f'{e}: {self.db_path}')
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        logger.debug('DatabaseConnectionManager.__exit__()')
+        if DEBUG: logger.debug('DatabaseConnectionManager.__exit__()')
         self.cursor.close()
         if isinstance(exc_value, Exception):
             self.connection.rollback()
@@ -69,8 +71,7 @@ class SpinnerManager:
         while 1:
             for cursor in '|/-\\': yield cursor
 
-    def __init__(self, debug: bool=None, delay=None):
-        self.debug = debug
+    def __init__(self, delay=None):
         self.spinner_generator = self.spinning_cursor()
         if delay and float(delay): self.delay = delay
 
@@ -84,13 +85,13 @@ class SpinnerManager:
 
     def __enter__(self):
         self.busy = True
-        if self.debug: logger.debug(f"SpinnerManager(debug={self.debug}).__enter__()")
+        if DEBUG: logger.debug("SpinnerManager().__enter__()")
         self.threading.Thread(target=self.spinner_task).start()
 
     def __exit__(self, exception, value, tb):
         self.busy = False
         self.sleep(self.delay)
-        if self.debug: logger.debug(f"SpinnerManager(debug={self.debug}).__exit__()")
+        if DEBUG: logger.debug("SpinnerManager().__exit__()")
         if exception is not None:
             return False
 
@@ -105,7 +106,6 @@ class WebDriverManager:
     from selenium.webdriver import FirefoxOptions
 
     def __init__(self, debug: bool):
-        self.debug = debug
         # self.opt = self.ChromeOptions()
         self.opt = self.FirefoxOptions()
         self.opt.add_argument("--headless=new")
@@ -117,7 +117,7 @@ class WebDriverManager:
     def __enter__(self):
         # self.driver = self.Chrome(options=self.opt)
         self.driver = self.Firefox(options=self.opt)
-        if self.debug: logger.debug(f'{self.__class__.__name__}.__enter__(session={self.driver.session_id})')
+        if DEBUG: logger.debug(f'{self.__class__.__name__}.__enter__(session={self.driver.session_id})')
         # Install ad blocker if used
         # if os.path.exists(ADBLOCK):
         #     self.driver.install_addon(ADBLOCK)
@@ -128,4 +128,4 @@ class WebDriverManager:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.driver.quit()
-        if self.debug: logger.debug(f'{self.__class__.__name__}.__exit__({self.driver.session_id})')
+        if DEBUG: logger.debug(f'{self.__class__.__name__}.__exit__({self.driver.session_id})')

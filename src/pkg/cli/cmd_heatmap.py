@@ -3,6 +3,8 @@ import logging
 
 import click
 
+from pkg import DEBUG
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ DESCRIPTION
 @click.pass_obj
 def cli(ctx, arguments):
     """Run heatmap command"""
+    if DEBUG: logger.debug(f"start_cli(ctx={type(ctx)}, arguments={arguments})")
     ctx['interface']['command'] = 'heatmap'
 
     # Add 'arguments' to 'interface' ctx
@@ -37,7 +40,7 @@ def cli(ctx, arguments):
     else:  # use chart_service heat_map list
         ctx['interface']['arguments'] = sorted(list(ctx['chart_service']['heatmap_list'].split(' ')))
 
-    if ctx['default']['debug']: logger.debug(f'cli(ctx={ctx} {type(ctx)})')
+    if DEBUG: logger.debug(f'cli(ctx={ctx})')
 
     if click.confirm(f"Downloading: {ctx['interface']['arguments']}\n Do you want to continue?"):
         # Download heatmaps

@@ -4,7 +4,7 @@ import os
 
 import click
 
-from pkg import config_dict
+from pkg import config_dict, DEBUG
 
 
 logger = logging.getLogger(__name__)
@@ -35,5 +35,4 @@ class MyMultiCommand(click.MultiCommand):
 def start_cli(ctx):
     """"""
     ctx.obj = config_dict
-    if ctx.obj['default']['debug']:
-        logger.debug(f"start_cli(ctx={ctx.obj}, {type(ctx)})")
+    if DEBUG: logger.debug(f"start_cli(ctx={ctx.obj}, {type(ctx)})")

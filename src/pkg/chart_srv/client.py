@@ -6,6 +6,8 @@ import logging
 
 from pathlib import Path
 
+from pkg import DEBUG
+
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +15,6 @@ logger = logging.getLogger(__name__)
 # TODO combine get_heatmap and get_stockchart
 def get_heatmap(ctx):
     """Check if `heatmap` folder exists. Direct workflow of client"""
-    DEBUG = ctx['default']['debug']
     if DEBUG: logger.debug(f"get_heatmap(ctx={type(ctx)})")
 
     # check 'heatmap' folder exists in users 'work_dir', if not create 'heatmap' folder
@@ -28,7 +29,6 @@ def get_heatmap(ctx):
 
 def get_stockchart(ctx):
     """Check if `chart` folder exists. Direct workflow of client"""
-    DEBUG = ctx['default']['debug']
     if DEBUG: logger.debug(f"get_stockchart(ctx={type(ctx)})")
 
     # check 'chart' folder exists in users 'work_dir', if not create 'chart' folder
@@ -43,7 +43,7 @@ def get_stockchart(ctx):
 
 def _download(ctx):
     """"""
-    if ctx['default']['debug']: logger.debug(f"_download(ctx={type(ctx)})")
+    if DEBUG: logger.debug(f"_download(ctx={type(ctx)})")
 
     # Select which version of the webscraper to use
     if ctx['interface']['command'] == 'chart':

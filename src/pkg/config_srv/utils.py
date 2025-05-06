@@ -1,4 +1,4 @@
-"""src/pkg/utils/cfg_srv\n
+"""src/pkg/config_srv/utils\n
 get_arg_value()\n
 update_debug()\n
 update_list()\n
@@ -7,14 +7,15 @@ import logging
 
 from configparser import ConfigParser
 
+from pkg import DEBUG
+
 
 logger = logging.getLogger(__name__)
 
 
 def get_arg_value(ctx: dict)->str:
     """Return first value from arguments tuple."""
-    if ctx['default']['debug']:
-        logger.debug(f"get_arg_value(ctx={ctx}, {type(ctx)}")
+    if DEBUG: logger.debug(f"get_arg_value(ctx={ctx}")
 
     new_value = ctx['interface']['arguments'][0]
     return new_value
@@ -22,8 +23,7 @@ def get_arg_value(ctx: dict)->str:
 
 def update_debug(ctx: dict):
     """Enter any character to toggle debug (logging) status."""
-    if ctx['default']['debug']:
-        logger.debug(f"update_debug(ctx={ctx}, {type(ctx)}")
+    if DEBUG: logger.debug(f"update_debug(ctx={ctx}")
 
     # Toggle current boolean value
     new_value = not ctx['default']['debug']
@@ -31,15 +31,15 @@ def update_debug(ctx: dict):
 
 
 def update_list(ctx: dict):
-    """Set the default list of heatmaps to download."""
-    # Get arguments and opt_trans
+    """Set the default list of items to download."""
+    # Get service, arguments, and opt_trans
+    service = ctx['interface']['service']
     arguments = list(ctx['interface']['arguments'])
     opt_trans = ctx['interface']['opt_trans']
 
-    cur_list = ctx['chart_service'][opt_trans].split(' ')
+    cur_list = ctx[service][opt_trans].split(' ')
 
-    if ctx['default']['debug']:
-        logger.debug(f"update_heatmap_list(ctx={ctx}, {type(ctx)})")
+    if DEBUG: logger.debug(f"update_heatmap_list(ctx={ctx})")
 
     extend_list, remove_list = [], []  # create lists
 
@@ -66,8 +66,7 @@ def update_list(ctx: dict):
 
 def write_file(ctx: dict):
     """Write new value to the appropriate config file"""
-    if ctx['default']['debug']:
-        logger.debug(f"write_file(ctx={ctx}, {type(ctx)})")
+    if DEBUG: logger.debug(f"write_file(ctx={ctx})")
 
     # Extract some config info from context object
     config_name = ctx['interface']['config_file']

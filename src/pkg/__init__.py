@@ -70,9 +70,10 @@ config_dict['default']['debug'] = config_obj.getboolean('default', 'debug')
 config_dict['default']['cfg_main'] = config_file
 
 # Print/log some debug information
-# logger = logging.getLogger(f"\n === Starting stomartat package ===  src/{__name__}/__init__.py")
-logger = logging.getLogger(f"  === Starting stomartat package ===   src/{__name__}/__init__.py")
-if config_dict['default']['debug']: logger.debug(f"""
+logger = logging.getLogger(f"  === Starting stomartat package - src/{__name__}/__init__.py ===")
+DEBUG = config_dict['default']['debug']
+# if config_dict['default']['debug']: logger.debug(f"""
+if DEBUG: logger.debug(f"""
     root_dir: {root_dir}
     src_dir: {src_dir}
     work_dir: {work_dir}

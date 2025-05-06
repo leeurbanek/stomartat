@@ -3,6 +3,8 @@ import logging
 
 import click
 
+from pkg import DEBUG
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,8 @@ def cli(ctx, arguments, opt_trans):
         'daily': ['Daily', ],
         'weekly': ['Weekly', ]
         }
+    if DEBUG:
+        logger.debug(f"start_cli(ctx={type(ctx)}, arguments={arguments}, opt_trans={opt_trans})")
 
     # Add 'opt_trans' to 'interface' ctx
     if opt_trans:  # use period_dict value
@@ -58,7 +62,7 @@ def cli(ctx, arguments, opt_trans):
     else:  # use chart_service chart_list
         ctx['interface']['arguments'] = sorted(list(ctx['chart_service']['chart_list'].split(' ')))
 
-    if ctx['default']['debug']: logger.debug(f'cli(ctx={ctx} {type(ctx)})')
+    if DEBUG: logger.debug(f'cli(ctx={ctx})')
 
     if click.confirm(f"Downloading: {ctx['interface']['arguments']}, {ctx['interface']['opt_trans']}\n Do you want to continue?"):
         # Download charts

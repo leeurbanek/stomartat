@@ -23,6 +23,7 @@ from selenium.common.exceptions import (
     ElementNotInteractableException,
     TimeoutException,
 )
+from pkg import DEBUG
 
 logging.config.fileConfig(fname="src/logger.ini")
 logging.getLogger("PIL").setLevel(logging.WARNING)
@@ -34,7 +35,6 @@ class WebScraper:
 
     def __init__(self, ctx):
         self.base_url = ctx["chart_service"]["url_heatmap"]
-        self.debug = ctx["default"]["debug"]
         self.heatmap_dir = f"{ctx['default']['work_dir']}heatmap"
         self.period = ctx["interface"]["arguments"]
 
@@ -43,8 +43,7 @@ class WebScraper:
 
     def webscraper(self):
         """Main entry point to class. Directs workflow of webscraper."""
-        if self.debug:
-            logger.debug(f"webscraper(self={self})")
+        if DEBUG: logger.debug(f"webscraper(self={self})")
 
         # opt = ChromeOptions()
         opt = FirefoxOptions()
@@ -80,14 +79,12 @@ class WebScraper:
         query_dict["time"] = period
         encoded_params = urlencode(query_dict, doseq=True)
         url = urlunparse(parsed_url._replace(query=encoded_params))
-        if self.debug:
-            logger.debug(f"_modify_query_time_period()-> {url}")
+        if DEBUG: logger.debug(f"_modify_query_time_period()-> {url}")
         return url
 
     def _get_png_img_bytes(self, driver: object) -> bytes:
         """Get the chart image source and convert the bytes to PNG image"""
-        if self.debug:
-            logger.debug(f"_get_png_img_bytes(driver{driver})")
+        if DEBUG: logger.debug(f"_get_png_img_bytes(driver{driver})")
 
         canvas_element = WebDriverWait(driver=driver, timeout=10).until(
             EC.presence_of_element_located(
@@ -100,14 +97,12 @@ class WebScraper:
             )
         )
         loc = canvas_element.location_once_scrolled_into_view
-        if self.debug:
-            logger.debug(f"canvas_element: {canvas_element}, loc: {loc}")
+        if DEBUG: logger.debug(f"canvas_element: {canvas_element}, loc: {loc}")
         return canvas_element.screenshot_as_png
 
     def _save_png_image(self, image_src: bytes, period: str):
         """Save image to the work directory"""
-        if self.debug:
-            logger.debug(f"_save_png_image(image_src={type(image_src)}, period={period})")
+        if DEBUG: logger.debug(f"_save_png_image(image_src={type(image_src)}, period={period})")
 
         png_image = Image.open(BytesIO(image_src)).convert("RGB")
         png_image.save(os.path.join(self.heatmap_dir, f"SP500_{period.lower()}.png"), "PNG", quality=80)
