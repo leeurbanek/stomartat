@@ -83,6 +83,10 @@ if DEBUG: logger.debug(f"""
     config_dict: {config_dict}
 """)
 
+# # remove old 'debug.log'
+# if os.path.exists('debug.log'):
+#     os.remove('debug.log')
+
 # Choose user interface
 def run_cli():
     """see 'pyproject.toml' - entry point for CLI"""

@@ -18,19 +18,26 @@ def get_ohlc_data(ctx):
     Path(f"{ctx['default']['work_dir']}/data").mkdir(parents=True, exist_ok=True)
 
     if not DEBUG: print('\nBegin download')
-    _download(ctx=ctx)
+    df = _download_data(ctx=ctx)
+    _process_data(df=df)
     if not DEBUG: print(' finished!')
     if not DEBUG: print(f" Saved to: '{ctx['default']['work_dir']}data'\n")
 
 
-def _download(ctx):
+def _download_data(ctx):
     """"""
-    if DEBUG: logger.debug(f"_download(ctx={ctx})")
+    if DEBUG: logger.debug(f"_download_data(ctx={ctx})")
 
     # select data provider
     if ctx['data_service']['data_provider'] == "tiingo":
         from pkg.data_srv.reader import TiingoReader
-        start = TiingoReader(ctx)
-        start.data_reader()
+        tiingo = TiingoReader(ctx)
+        df = tiingo.data_reader()
     else:
         pass
+    return df
+
+
+def _process_data(df):
+    """"""
+    if DEBUG: logger.debug(f"_process_data(df={df})")
