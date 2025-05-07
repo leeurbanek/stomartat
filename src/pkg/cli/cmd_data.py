@@ -30,17 +30,23 @@ def cli(ctx, arguments):
     """Run data command"""
     ctx['interface']['command'] = 'data'
 
-    # Add 'arguments' to 'interface' ctx
+    # add arguments to interface ctx and set database name
     if arguments:  # use symbols in arguments list
         ctx['interface']['arguments'] = sorted([i.upper() for i in list(arguments)])
-    else:  # use data_service chart_list
+        ctx['interface']['database'] = click.prompt(
+            f" Using database `custom.db`.\n Type a new database name to change,\n press Enter to accept.", default="custom.db"
+        )
+    else:  # use symbols in data_service data_list
         ctx['interface']['arguments'] = sorted(list(ctx['data_service']['data_list'].split(' ')))
+        ctx['interface']['database'] = click.prompt(
+            f" Using database `default.db`.\n Type a new database name to change,\n press Enter to accept", default="default.db"
+        )
 
-    if DEBUG: logger.debug(f"cli(ctx={ctx} {type(ctx)}, arguments={arguments})")
-
-    if click.confirm(f" Downloading: {ctx['interface']['arguments']}\n Do you want to continue?"):
-        # Download data
+    if click.confirm(f" Saving data for {ctx['interface']['arguments']} to `{ctx['interface']['database']}`.\n Do you want to continue?"):
+        # download data
         from pkg.data_srv import client
-        client.get_ohlc_data(ctx=ctx)
-    else:  # Print default message
-        click.echo(" Goodby.")
+        if DEBUG: logger.debug(
+            f"cli(ctx={type(ctx)}, arguments={ctx['interface']['arguments']})"
+        )
+        for symbol in ctx['interface']['arguments']:
+            client.get_ohlc_data(ctx=ctx, symbol=symbol)
