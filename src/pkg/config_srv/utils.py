@@ -39,7 +39,7 @@ def update_list(ctx: dict):
 
     cur_list = ctx[service][opt_trans].split(' ')
 
-    if DEBUG: logger.debug(f"update_heatmap_list(ctx={ctx})")
+    if DEBUG: logger.debug(f"update_list(ctx={ctx})")
 
     extend_list, remove_list = [], []  # create lists
 

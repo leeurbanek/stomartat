@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 class DataProcessor:
     """"""
-    def __init__(self, data:tuple):
+    def __init__(self, ctx:dict, data:tuple):
+        # self.line = sorted(list(ctx['data_service']['data_line'].split(' ')))
+        self.line = ctx['interface']['data_line']
         self.symbol = data[0]
         self.data = data[1]
         self.df = pd.DataFrame(index=data[1].index)
@@ -23,6 +25,7 @@ class DataProcessor:
             f"{self.__class__.__name__}("
             f"symbol={self.symbol}, "
             f"data={self.data}), "
+            f"line={self.line}), "
             f"df={self.df}"
             )
 
@@ -31,69 +34,57 @@ class DataProcessor:
         if DEBUG: logger.debug(f"process_dataframe(self={self})")
 
         # add columns to df for price, volume, etc.
-        self._add_close_weighted_price()
-        self._add_volume_series()
+        for l, line in enumerate(self.line):
+            eval(f"self._add_{line.lower()}_series({l})")
 
         return self.df
 
 
-    def _add_close_location_value(self):
-        """"""
-        if DEBUG: logger.debug(f"_add_close_location_value(df={self.df})")
+    def _add_clop_series(self, loc):
+        """difference of close and open prices"""
+        clop = (self.data['close'] - self.data['open']).astype(int)
+        if DEBUG: logger.debug(f"clop:\n{clop}")
 
-# TODO set series data type int
-    def _add_close_weighted_price(self):
-        """"""
-        if DEBUG: logger.debug(f"_add_close_weighted_price(df={self.df})")
+        self.df.insert(
+            loc=loc, column='clop', value=clop, allow_duplicates=True
+        )
 
+    def _add_clv_series(self, loc):
+        """measures location of the price in relation to the high-low range"""
+        clv = round(
+            ((2 * self.data['close'] - self.data['low'] - self.data['high'])
+             / (self.data['high'] - self.data['low'])) * 100).astype(int)
+        if DEBUG: logger.debug(f"clv:\n{clv}")
+
+        self.df.insert(
+            loc=loc, column='clv', value=clv, allow_duplicates=True
+        )
+
+    def _add_hilo_series(self, loc):
+        """difference of high and low prices"""
+        hilo = (self.data['high'] - self.data['low']).astype(int)
+        if DEBUG: logger.debug(f"hilo:\n{hilo}")
+
+        self.df.insert(
+            loc=loc, column='hilo', value=hilo, allow_duplicates=True
+        )
+
+    def _add_price_series(self, loc):
+        """average price with extra weight given to the closing price"""
         price = round(
             (self.data['high'] + self.data['low'] + self.data['close'] * 2) / 4
-        )
-        self.df.insert(
-            loc=0, column='price', value=price, allow_duplicates=True
-        )
-
-    def _add_volume_series(self):
-        """"""
-        if DEBUG: logger.debug(f"_add_volume_series(self={type(self)})")
+        ).astype(int)
+        if DEBUG: logger.debug(f"price:\n{price}")
 
         self.df.insert(
-            loc=1, column='volume', value=self.data['volume'], allow_duplicates=True
+            loc=loc, column='price', value=price, allow_duplicates=True
         )
 
+    def _add_volume_series(self, loc):
+        """period volume"""
+        volume = self.data['volume']
+        if DEBUG: logger.debug(f"volume:\n{volume}")
 
-# def close_location_value(tuple_list):
-#     """"""
-#     if debug: logger.debug(f"close_location_value(tuple_list={tuple_list})")
-
-#     CLV = namedtuple('CLV', ['symbol', 'date', 'clv'])
-#     clv_list =[]
-
-#     for item in tuple_list:
-#         close_location_value = CLV(
-#             item.symbol,
-#             item.date,
-#             round(((2 * item.close - item.low - item.high) / (item.high - item.low)) * 100)
-#         )
-#         clv_list.append(close_location_value)
-
-#     if debug: logger.debug(f"close_location_value() -> clv_list:\n{clv_list})")
-#     return clv_list
-
-# def close_weighted_price(tuple_list):
-#     """"""
-#     if debug: logger.debug(f"close_weighted_price(tuple_list={tuple_list})")
-
-#     Price = namedtuple('Price', ['symbol', 'date', 'price'])
-#     price_list =[]
-
-#     for item in tuple_list:
-#         close_weighted_price = Price(
-#             item.symbol,
-#             item.date,
-#             round((item.high + item.low + item.close * 2) / 4)
-#         )
-#         price_list.append(close_weighted_price)
-
-#     if debug: logger.debug(f"close_weighted_price() -> price_list:\n{price_list})")
-#     return price_list
+        self.df.insert(
+            loc=loc, column='volume', value=volume, allow_duplicates=True
+        )

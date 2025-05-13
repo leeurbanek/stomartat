@@ -23,10 +23,23 @@ DESCRIPTION
 @click.argument(
     'arguments', nargs=-1, default=None, required=False, type=str
 )
+# @click.option(
+#     '--line', 'opt_trans', flag_value='data_line', help='Customize data line list.'
+# )
+@click.option(
+    '--line', 'data_line',
+    prompt='*Using default data_line list. Type in specific lines to download,\n press Enter to accept default lines',
+    prompt_required=True,
+    default='clop clv hilo price volume',
+    help='Select which data lines to save.'
+)
+# @click.option(
+#     '-d', '--daily', 'opt_trans', flag_value='daily', help='Fetch only daily charts.'
+# )
 
 # @click.pass_context
 @click.pass_obj
-def cli(ctx, arguments):
+def cli(ctx, arguments, data_line):
     """Run data command"""
     ctx['interface']['command'] = 'data'
 
@@ -34,15 +47,21 @@ def cli(ctx, arguments):
     if arguments:  # use symbols in arguments list
         ctx['interface']['arguments'] = sorted([i.upper() for i in list(arguments)])
         ctx['interface']['database'] = click.prompt(
-            f" Using database `custom.db`.\n Type a new database name to change,\n press Enter to accept.", default="custom.db"
+            f"*Using database 'custom.db'. Type a new database name to change,\n press Enter to accept.", default="custom.db"
         )
     else:  # use symbols in data_service data_list
         ctx['interface']['arguments'] = sorted(list(ctx['data_service']['data_list'].split(' ')))
         ctx['interface']['database'] = click.prompt(
-            f" Using database `default.db`.\n Type a new database name to change,\n press Enter to accept", default="default.db"
+            f"*Using database 'default.db'. Type a new database name to change,\n press Enter to accept", default="default.db"
         )
 
-    if click.confirm(f" Saving data for {ctx['interface']['arguments']} to `{ctx['interface']['database']}`.\n Do you want to continue?"):
+    # Add 'opt_trans' to 'interface' ctx
+    if data_line:  # use custom values
+        ctx['interface']['data_line'] = sorted(list(data_line.split(' ')))
+    else:  # use default values
+        ctx['interface']['data_line'] = sorted(list(ctx['data_service']['data_line'].split(' ')))
+
+    if click.confirm(f"*Saving {ctx['interface']['data_line']} for {ctx['interface']['arguments']} to '{ctx['interface']['database']}.\n Do you want to continue?"):
         # download data
         from pkg.data_srv import client
         if DEBUG: logger.debug(

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_ohlc_data(ctx:dict, symbol:str)->None:
-    """Check if `data` folder exists. Direct workflow of client"""
+    """Direct workflow of client"""
     if DEBUG: logger.debug(f"get_ohlc_data(ctx={ctx}, symbol={symbol})")
 
     # check 'data' folder exists in users 'work_dir', if not create folder
@@ -29,7 +29,7 @@ def get_ohlc_data(ctx:dict, symbol:str)->None:
 
     # create price, volume, etc. dataframe for one symbol
     df = _create_dataframe_for_symbol(ctx=ctx, data=data)
-    if DEBUG: logger.debug(f"dataframe:\n{df}")
+    if DEBUG: logger.debug(f"dataframe for {symbol}:\n{df}\ncolumns: {list(df.columns)}")
 
     # if not DEBUG: print('\nBegin download')
     # if not DEBUG: print(' finished!')
@@ -38,6 +38,6 @@ def get_ohlc_data(ctx:dict, symbol:str)->None:
 
 def _create_dataframe_for_symbol(ctx:dict, data:tuple)->None:
     """"""
-    if DEBUG: logger.debug(f"_create_dataframe_for_symbol(ctx={type(ctx)}, data={data})")
-    start = DataProcessor(data=data)
+    if DEBUG: logger.debug(f"_create_dataframe_for_symbol(ctx={type(ctx)}, data={type(data)})")
+    start = DataProcessor(ctx=ctx, data=data)
     return start.process_dataframe()

@@ -50,17 +50,17 @@ def cli(ctx, arguments, opt_trans):
     if DEBUG:
         logger.debug(f"start_cli(ctx={type(ctx)}, arguments={arguments}, opt_trans={opt_trans})")
 
-    # Add 'opt_trans' to 'interface' ctx
-    if opt_trans:  # use period_dict value
-        ctx['interface']['opt_trans'] = period_dict[opt_trans]
-    else:  # set default value to daily
-        ctx['interface']['opt_trans'] = period_dict['daily']
-
     # Add 'arguments' to 'interface' ctx
     if arguments:  # download charts in arguments list
         ctx['interface']['arguments'] = sorted([a.upper() for a in list(arguments)])
     else:  # use chart_service chart_list
         ctx['interface']['arguments'] = sorted(list(ctx['chart_service']['chart_list'].split(' ')))
+
+    # Add 'opt_trans' to 'interface' ctx
+    if opt_trans:  # use period_dict value
+        ctx['interface']['opt_trans'] = period_dict[opt_trans]
+    else:  # set default value to daily
+        ctx['interface']['opt_trans'] = period_dict['daily']
 
     if DEBUG: logger.debug(f'cli(ctx={ctx})')
 

@@ -12,52 +12,6 @@ from pkg import DEBUG
 logger = logging.getLogger(__name__)
 
 
-class DatabaseConnectionManager:
-    """Context manager for Sqlite3 databases.
-    -----------------------------------------
-    Commits changes on exit.\n
-    Parameters
-    ----------
-    `db_path` : string
-        Path to an Sqlite3 database (default='test.db' for in memory db).\n
-    `mode` : string
-        determines if the new database is opened read-only 'ro', read-write 'rw',\n
-        read-write-create 'rwc', or pure in-memory database 'memory' (default) mode.\n
-    Returns
-    -------
-    An Sqlite3 connection object.\n
-    """
-    import sqlite3
-
-    def __init__(self, db_path='test.db', mode='memory'):
-        self.db_path = db_path
-        self.mode = mode
-
-    def __enter__(self):
-        if DEBUG: logger.debug('DatabaseConnectionManager.__enter__()')
-        try:
-            self.connection = self.sqlite3.connect(
-                f'file:{os.path.abspath(self.db_path)}?mode={self.mode}',
-                # detect_types=self.sqlite3.PARSE_DECLTYPES, uri=True
-                detect_types=self.sqlite3.PARSE_DECLTYPES | self.sqlite3.PARSE_COLNAMES, uri=True
-            )
-            self.cursor = self.connection.cursor()
-            if DEBUG: logger.debug(f"connected '{os.path.basename(self.db_path)}', mode: {self.mode}")
-            # return self.cursor
-            return self
-        except self.sqlite3.Error as e:
-            print(f'{e}: {self.db_path}')
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        if DEBUG: logger.debug('DatabaseConnectionManager.__exit__()')
-        self.cursor.close()
-        if isinstance(exc_value, Exception):
-            self.connection.rollback()
-        else:
-            self.connection.commit()
-        self.connection.close()
-
-
 class SpinnerManager:
     """Manage a simple spinner object"""
     import sys
@@ -94,6 +48,60 @@ class SpinnerManager:
         if DEBUG: logger.debug("SpinnerManager().__exit__()")
         if exception is not None:
             return False
+
+
+class SqliteConnectManager:
+    """Context manager for Sqlite3 database
+    ------------------------------------
+    Commits changes on exit.\n
+    Parameters
+    ----------
+    `ctx` : dict
+        dictionary containing various default settings\n
+    `mode` : string
+        open database for read-only 'ro', read-write 'rw', \n
+        read-write-create 'rwc', or 'memory' for in-memory db\n
+    Returns
+    -------
+    An Sqlite3 connection object.\n
+    """
+    import sqlite3
+
+    def __init__(self, ctx:dict, mode:str='ro'):
+        self.ctx = ctx
+        self.db_path = f"{ctx['default']['work_dir']}/{ctx['interface']['database']}"
+        self.mode = mode
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}("
+            f"ctx={type(self.start_date)}, "
+            f"db_path={self.db_path}, "
+            f"mode={self.mode})"
+            )
+
+    def __enter__(self):
+        if DEBUG: logger.debug(f"{self.__class__.__name__}.__enter__")
+        try:
+            self.connection = self.sqlite3.connect(
+                f'file:{os.path.abspath(self.db_path)}?mode={self.mode}',
+                # detect_types=sqlite3.PARSE_DECLTYPES, uri=True
+                detect_types=self.sqlite3.PARSE_DECLTYPES | self.sqlite3.PARSE_COLNAMES, uri=True
+            )
+            self.cursor = self.connection.cursor()
+            if DEBUG: logger.debug(f"connected '{self.db_path}', mode: {self.mode}")
+            return self
+        except self.sqlite3.Error as e:
+            print(f'{e}: {self.db_path}')
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if DEBUG: logger.debug(f"{self.__class__.__name__}.__exit__()")
+        self.cursor.close()
+        if isinstance(exc_value, Exception):
+            self.connection.rollback()
+        else:
+            self.connection.commit()
+        self.connection.close()
 
 
 class WebDriverManager:

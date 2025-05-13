@@ -38,6 +38,24 @@ DESCRIPTION
     With no arguments: display the current webdriver used.
     Valid options (arguments) are chromedriver, geckodriver.
 """)
+# data_srv, change the data frequency period of time (daily, weekly)
+@click.option(
+    '--data-frequency', 'opt_trans', flag_value='data_frequency', help=f"""
+    With no arguments: display the current sampling period.
+    Valid options (arguments) are 'daily', 'weekly',
+    'monthly', 'annually'.
+""")
+# data_srv, change the default list of data lines to download (dataframe columns)
+@click.option(
+    '--data-line', 'opt_trans', flag_value='data_line', help=f"""
+    When used without arguments the current list of data
+    lines to download is displayed. Used with one or more
+    arguments: if the arguments are in the current list
+    those arguments will be removed from the data line list,
+    if the arguments are not in the current list then those
+    lines will be added to the list. Valid arguments are:
+    'clop', 'clv', 'hilo', 'price', 'volume'.
+""")
 # data_srv, change the default list of ohlc data to download (ticker symbols)
 @click.option(
     '--data-list', 'opt_trans', flag_value='data_list', help=f"""
@@ -54,13 +72,6 @@ DESCRIPTION
     With no argument: display the current lookback period in
     days. Add an integer argument to change the number of
     days in the lookback period.
-""")
-# data_srv, change the data frequency period of time (daily, weekly)
-@click.option(
-    '--data-frequency', 'opt_trans', flag_value='data_frequency', help=f"""
-    With no arguments: display the current sampling period.
-    Valid options (arguments) are 'daily', 'weekly',
-    'monthly', 'annually'.
 """)
 # # data_srv, change the data provider (alphavantage, tiingo, yahoo)
 # @click.option(
@@ -146,6 +157,24 @@ def cli(ctx, arguments, opt_trans):
                 click.echo(" Done!")
         else:
             click.echo(f" Valid arguments are:\n {valid_arg}")
+
+    elif opt_trans == 'data_line':
+        ctx['interface']['service'] = 'data_service'
+
+        cur_val = ctx['data_service'][opt_trans].split(', ')
+
+        if not arguments:
+            click.echo(f" Current data line list: {cur_val}")
+        else:
+            # Update data line list
+            new_value = utils.update_list(ctx=ctx)
+            if click.confirm(f" Replacing\n\t{cur_val}\n with:\n\t[{new_value}]\n Do you want to continue?"):
+                ctx['interface']['config_file'] = 'cfg_data'
+                ctx['interface']['section'] = 'data_service'
+                ctx['interface']['new_value'] = new_value
+                # Write new argument list to config file
+                utils.write_file(ctx)
+                click.echo(" Done!")
 
     elif opt_trans == 'data_list':
         ctx['interface']['service'] = 'data_service'
