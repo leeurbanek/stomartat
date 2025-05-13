@@ -69,19 +69,19 @@ class SqliteConnectManager:
 
     def __init__(self, ctx:dict, mode:str='ro'):
         self.ctx = ctx
-        self.db_path = f"{ctx['default']['work_dir']}/{ctx['interface']['database']}"
+        self.db_path = f"{ctx['default']['work_dir']}data/{ctx['interface']['database']}"
         self.mode = mode
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}("
-            f"ctx={type(self.start_date)}, "
+            f"ctx={type(self.ctx)}, "
             f"db_path={self.db_path}, "
             f"mode={self.mode})"
             )
 
     def __enter__(self):
-        if DEBUG: logger.debug(f"{self.__class__.__name__}.__enter__")
+        if DEBUG: logger.debug(f"{self}.__enter__")
         try:
             self.connection = self.sqlite3.connect(
                 f'file:{os.path.abspath(self.db_path)}?mode={self.mode}',
@@ -89,7 +89,9 @@ class SqliteConnectManager:
                 detect_types=self.sqlite3.PARSE_DECLTYPES | self.sqlite3.PARSE_COLNAMES, uri=True
             )
             self.cursor = self.connection.cursor()
-            if DEBUG: logger.debug(f"connected '{self.db_path}', mode: {self.mode}")
+            # if DEBUG: logger.debug(f"{self.__class__.__name__} {self.cursor}")
+            if DEBUG: logger.debug(f"cursor: {self.cursor}")
+
             return self
         except self.sqlite3.Error as e:
             print(f'{e}: {self.db_path}')

@@ -31,7 +31,7 @@ class DataProcessor:
 
     def process_dataframe(self):
         """"""
-        if DEBUG: logger.debug(f"process_dataframe(self={self})")
+        if DEBUG: logger.debug(f"{type(self)}")
 
         # add columns to df for price, volume, etc.
         for l, line in enumerate(self.line):
@@ -43,7 +43,7 @@ class DataProcessor:
     def _add_clop_series(self, loc):
         """difference of close and open prices"""
         clop = (self.data['close'] - self.data['open']).astype(int)
-        if DEBUG: logger.debug(f"clop:\n{clop}")
+        if DEBUG: logger.debug(f"_add_clop_series()-> {type(clop)}")
 
         self.df.insert(
             loc=loc, column='clop', value=clop, allow_duplicates=True
@@ -54,7 +54,7 @@ class DataProcessor:
         clv = round(
             ((2 * self.data['close'] - self.data['low'] - self.data['high'])
              / (self.data['high'] - self.data['low'])) * 100).astype(int)
-        if DEBUG: logger.debug(f"clv:\n{clv}")
+        if DEBUG: logger.debug(f"_add_clv_series()-> {type(clv)}")
 
         self.df.insert(
             loc=loc, column='clv', value=clv, allow_duplicates=True
@@ -63,7 +63,7 @@ class DataProcessor:
     def _add_hilo_series(self, loc):
         """difference of high and low prices"""
         hilo = (self.data['high'] - self.data['low']).astype(int)
-        if DEBUG: logger.debug(f"hilo:\n{hilo}")
+        if DEBUG: logger.debug(f"_add_hilo_series()-> {type(hilo)}")
 
         self.df.insert(
             loc=loc, column='hilo', value=hilo, allow_duplicates=True
@@ -74,7 +74,7 @@ class DataProcessor:
         price = round(
             (self.data['high'] + self.data['low'] + self.data['close'] * 2) / 4
         ).astype(int)
-        if DEBUG: logger.debug(f"price:\n{price}")
+        if DEBUG: logger.debug(f"_add_price_series()-> {type(price)}")
 
         self.df.insert(
             loc=loc, column='price', value=price, allow_duplicates=True
@@ -83,7 +83,7 @@ class DataProcessor:
     def _add_volume_series(self, loc):
         """period volume"""
         volume = self.data['volume']
-        if DEBUG: logger.debug(f"volume:\n{volume}")
+        if DEBUG: logger.debug(f"_add_volume_series()-> {type(volume)}")
 
         self.df.insert(
             loc=loc, column='volume', value=volume, allow_duplicates=True

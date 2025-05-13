@@ -3,10 +3,9 @@ get_ohlc_data(ctx) - fetch OHLC data\n
 """
 import logging
 
-from pathlib import Path
-
-from pkg.data_srv.process import DataProcessor
 from pkg import DEBUG
+from pkg.data_srv import utils
+from pkg.data_srv.process import DataProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -15,9 +14,6 @@ logger = logging.getLogger(__name__)
 def get_ohlc_data(ctx:dict, symbol:str)->None:
     """Direct workflow of client"""
     if DEBUG: logger.debug(f"get_ohlc_data(ctx={ctx}, symbol={symbol})")
-
-    # check 'data' folder exists in users 'work_dir', if not create folder
-    Path(f"{ctx['default']['work_dir']}/data").mkdir(parents=True, exist_ok=True)
 
     # select data provider and get data
     if ctx['data_service']['data_provider'] == "tiingo":
@@ -30,6 +26,7 @@ def get_ohlc_data(ctx:dict, symbol:str)->None:
     # create price, volume, etc. dataframe for one symbol
     df = _create_dataframe_for_symbol(ctx=ctx, data=data)
     if DEBUG: logger.debug(f"dataframe for {symbol}:\n{df}\ncolumns: {list(df.columns)}")
+
 
     # if not DEBUG: print('\nBegin download')
     # if not DEBUG: print(' finished!')

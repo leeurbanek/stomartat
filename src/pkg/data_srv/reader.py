@@ -105,7 +105,7 @@ class TiingoReader:
         ]
         dict_list = eval(symbol)
 
-        if DEBUG: logger.debug(f"_fetch_ohlc_price_data(symbol={symbol}) -> \n{dict_list}")
+        if DEBUG: logger.debug(f"_fetch_ohlc_price_data(symbol={symbol})-> {type(dict_list)}")
         return dict_list
 
 
@@ -122,5 +122,5 @@ class TiingoReader:
             adjVolume = item.get('adjVolume')
             data[date] = [adjOpen, adjHigh, adjLow, adjClose, adjVolume]
             ohlc.append(data)
-        if DEBUG: logger.debug(f"_parce_price_data(self, dict_list) -> \n{data}")
+        if DEBUG: logger.debug(f"_parce_price_data(self, dict_list)-> {type(data)}")
         return data

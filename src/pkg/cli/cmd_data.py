@@ -28,7 +28,7 @@ DESCRIPTION
 # )
 @click.option(
     '--line', 'data_line',
-    prompt='*Using default data_line list. Type in specific lines to download,\n press Enter to accept default lines',
+    prompt='* Using default data_line list.  Type in specific lines to download,\n  press Enter to accept default lines',
     prompt_required=True,
     default='clop clv hilo price volume',
     help='Select which data lines to save.'
@@ -47,12 +47,12 @@ def cli(ctx, arguments, data_line):
     if arguments:  # use symbols in arguments list
         ctx['interface']['arguments'] = sorted([i.upper() for i in list(arguments)])
         ctx['interface']['database'] = click.prompt(
-            f"*Using database 'custom.db'. Type a new database name to change,\n press Enter to accept.", default="custom.db"
+            f"* Using database 'custom.db'. Type a new database name to change,\n  press Enter to accept.", default="custom.db"
         )
     else:  # use symbols in data_service data_list
         ctx['interface']['arguments'] = sorted(list(ctx['data_service']['data_list'].split(' ')))
         ctx['interface']['database'] = click.prompt(
-            f"*Using database 'default.db'. Type a new database name to change,\n press Enter to accept", default="default.db"
+            f"* Using database 'default.db'. Type a new database name to change,\n  press Enter to accept", default="default.db"
         )
 
     # Add 'opt_trans' to 'interface' ctx
@@ -61,11 +61,17 @@ def cli(ctx, arguments, data_line):
     else:  # use default values
         ctx['interface']['data_line'] = sorted(list(ctx['data_service']['data_line'].split(' ')))
 
-    if click.confirm(f"*Saving {ctx['interface']['data_line']} for {ctx['interface']['arguments']} to '{ctx['interface']['database']}.\n Do you want to continue?"):
+    if click.confirm(f"* Saving {ctx['interface']['data_line']} for {ctx['interface']['arguments']}\n  to '{ctx['interface']['database']}. Do you want to continue?"):
         # download data
-        from pkg.data_srv import client
+        from pkg.data_srv import client, utils
+
         if DEBUG: logger.debug(
             f"cli(ctx={type(ctx)}, arguments={ctx['interface']['arguments']})"
         )
+        # check 'data' folder exists in users 'work_dir', if not create folder
+        utils.verify_data_folder_exists(ctx=ctx)
+        # create sqlite database
+        utils.sqlite_create_database(ctx=ctx, mode='rwc')
+
         for symbol in ctx['interface']['arguments']:
             client.get_ohlc_data(ctx=ctx, symbol=symbol)
