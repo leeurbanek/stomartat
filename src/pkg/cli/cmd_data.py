@@ -3,7 +3,7 @@ import logging
 
 import click
 
-from pkg import DEBUG
+from pkg import config_dict, DEBUG
 
 
 logger = logging.getLogger(__name__)
@@ -23,19 +23,13 @@ DESCRIPTION
 @click.argument(
     'arguments', nargs=-1, default=None, required=False, type=str
 )
-# @click.option(
-#     '--line', 'opt_trans', flag_value='data_line', help='Customize data line list.'
-# )
 @click.option(
     '--line', 'data_line',
     prompt='* Using default data_line list.  Type in specific lines to download,\n  press Enter to accept default lines',
     prompt_required=True,
-    default='clop clv hilo price volume',
+    default=config_dict['data_service']['data_line'],
     help='Select which data lines to save.'
 )
-# @click.option(
-#     '-d', '--daily', 'opt_trans', flag_value='daily', help='Fetch only daily charts.'
-# )
 
 # @click.pass_context
 @click.pass_obj
@@ -70,8 +64,9 @@ def cli(ctx, arguments, data_line):
         )
         # check 'data' folder exists in users 'work_dir', if not create folder
         utils.verify_data_folder_exists(ctx=ctx)
+
         # create sqlite database
-        utils.sqlite_create_database(ctx=ctx, mode='rwc')
+        utils.sqlite_create_database(ctx=ctx)
 
         for symbol in ctx['interface']['arguments']:
             client.get_ohlc_data(ctx=ctx, symbol=symbol)

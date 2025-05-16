@@ -88,3 +88,14 @@ class DataProcessor:
         self.df.insert(
             loc=loc, column='volume', value=volume, allow_duplicates=True
         )
+
+
+def get_list_of_tuples(symbol:str, df:pd.DataFrame)->list[tuple]:
+    """"""
+    if DEBUG: logger.debug(f"get_list_of_tuples(df={type(df)})")
+
+    return list(df.itertuples(index=True, name=symbol))
+
+# DataFrame.itertuples(index=True, name='Pandas')
+# list_of_tuples = list(df.itertuples(index=False, name=None))
+# print(list_of_tuples)

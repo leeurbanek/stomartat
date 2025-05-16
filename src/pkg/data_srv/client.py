@@ -4,8 +4,7 @@ get_ohlc_data(ctx) - fetch OHLC data\n
 import logging
 
 from pkg import DEBUG
-from pkg.data_srv import utils
-from pkg.data_srv.process import DataProcessor
+from pkg.data_srv import process, utils
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +26,16 @@ def get_ohlc_data(ctx:dict, symbol:str)->None:
     df = _create_dataframe_for_symbol(ctx=ctx, data=data)
     if DEBUG: logger.debug(f"dataframe for {symbol}:\n{df}\ncolumns: {list(df.columns)}")
 
+    tuple_list = process.get_list_of_tuples(symbol=symbol, df=df)
+    # if DEBUG: logger.debug(f"symbol: {symbol}, get_list_of_tuples(df)-> tuple_list: {tuple_list}, type: {type(tuple_list)}, index: {tuple_list.index}")
+
+    db_writer = utils.SqliteWriter(ctx=ctx)
+    db_writer.save_data(symbol=symbol, tuple_list=tuple_list)
+
+
+    # add symbol dataframe columns to database
+    # utils.add_df_column_data_to_db(ctx=ctx, df=df, symbol=symbol)
+
 
     # if not DEBUG: print('\nBegin download')
     # if not DEBUG: print(' finished!')
@@ -36,5 +45,5 @@ def get_ohlc_data(ctx:dict, symbol:str)->None:
 def _create_dataframe_for_symbol(ctx:dict, data:tuple)->None:
     """"""
     if DEBUG: logger.debug(f"_create_dataframe_for_symbol(ctx={type(ctx)}, data={type(data)})")
-    start = DataProcessor(ctx=ctx, data=data)
+    start = process.DataProcessor(ctx=ctx, data=data)
     return start.process_dataframe()

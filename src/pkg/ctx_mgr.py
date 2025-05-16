@@ -76,12 +76,12 @@ class SqliteConnectManager:
         return (
             f"{self.__class__.__name__}("
             f"ctx={type(self.ctx)}, "
-            f"db_path={self.db_path}, "
-            f"mode={self.mode})"
+            f"db_path='{self.db_path}', "
+            f"mode='{self.mode}')"
             )
 
     def __enter__(self):
-        if DEBUG: logger.debug(f"{self}.__enter__")
+        if DEBUG: logger.debug(f"{self}.__enter__()")
         try:
             self.connection = self.sqlite3.connect(
                 f'file:{os.path.abspath(self.db_path)}?mode={self.mode}',
