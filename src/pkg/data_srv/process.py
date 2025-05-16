@@ -45,7 +45,7 @@ class DataProcessor:
     def _add_clop_series(self, loc):
         """difference between the close and open price"""
         clop = (self.data['close'] - self.data['open']).astype(int)
-        if DEBUG: logger.debug(f"_add_clop_series()-> {type(clop)}")
+        if DEBUG: logger.debug(f"{self.symbol}_add_clop_series()-> {type(clop)}")
 
         self.df.insert(
             loc=loc, column='clop', value=clop, allow_duplicates=True
@@ -56,7 +56,7 @@ class DataProcessor:
         clv = round(
             ((2 * self.data['close'] - self.data['low'] - self.data['high'])
              / (self.data['high'] - self.data['low'])) * 100).astype(int)
-        if DEBUG: logger.debug(f"_add_clv_series()-> {type(clv)}")
+        if DEBUG: logger.debug(f"{self.symbol}_add_clv_series()-> {type(clv)}")
 
         self.df.insert(
             loc=loc, column='clv', value=clv, allow_duplicates=True
@@ -67,7 +67,7 @@ class DataProcessor:
         cwap = round(
             (self.data['high'] + self.data['low'] + self.data['close'] * 2) / 4
         ).astype(int)
-        if DEBUG: logger.debug(f"_add_price_series()-> {type(cwap)}")
+        if DEBUG: logger.debug(f"{self.symbol}_add_price_series()-> {type(cwap)}")
 
         self.df.insert(
             loc=loc, column='cwap', value=cwap, allow_duplicates=True
@@ -76,7 +76,7 @@ class DataProcessor:
     def _add_hilo_series(self, loc):
         """difference between the high and low price"""
         hilo = (self.data['high'] - self.data['low']).astype(int)
-        if DEBUG: logger.debug(f"_add_hilo_series()-> {type(hilo)}")
+        if DEBUG: logger.debug(f"{self.symbol}_add_hilo_series()-> {type(hilo)}")
 
         self.df.insert(
             loc=loc, column='hilo', value=hilo, allow_duplicates=True
@@ -85,7 +85,7 @@ class DataProcessor:
     def _add_volume_series(self, loc):
         """number of shares traded"""
         volume = self.data['volume']
-        if DEBUG: logger.debug(f"_add_volume_series()-> {type(volume)}")
+        if DEBUG: logger.debug(f"{self.symbol}_add_volume_series()-> {type(volume)}")
 
         self.df.insert(
             loc=loc, column='volume', value=volume, allow_duplicates=True
@@ -97,7 +97,3 @@ def df_to_list_of_tuples(symbol:str, df:pd.DataFrame)->list[tuple]:
     if DEBUG: logger.debug(f"df_to_list_of_tuples(df={type(df)})")
 
     return list(df.itertuples(index=True, name=symbol))
-
-# DataFrame.itertuples(index=True, name='Pandas')
-# list_of_tuples = list(df.itertuples(index=False, name=None))
-# print(list_of_tuples)
