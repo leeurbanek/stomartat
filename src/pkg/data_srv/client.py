@@ -26,12 +26,11 @@ def get_ohlc_data(ctx:dict, symbol:str)->None:
     df = _create_dataframe_for_symbol(ctx=ctx, data=data)
     if DEBUG: logger.debug(f"dataframe for {symbol}:\n{df}\ncolumns: {list(df.columns)}")
 
-    tuple_list = process.get_list_of_tuples(symbol=symbol, df=df)
-    # if DEBUG: logger.debug(f"symbol: {symbol}, get_list_of_tuples(df)-> tuple_list: {tuple_list}, type: {type(tuple_list)}, index: {tuple_list.index}")
+    tuple_list = process.df_to_list_of_tuples(symbol=symbol, df=df)
 
     db_writer = utils.SqliteWriter(ctx=ctx)
-    db_writer.save_data(symbol=symbol, tuple_list=tuple_list)
-
+    if DEBUG: logger.debug(f"db_writer={type(db_writer)}.save_data(tuple_list={type(tuple_list)})")
+    db_writer.save_data(tuple_list=tuple_list)
 
     # add symbol dataframe columns to database
     # utils.add_df_column_data_to_db(ctx=ctx, df=df, symbol=symbol)
