@@ -16,7 +16,8 @@ class SqliteWriter:
     """"""
     def __init__(self, ctx):
         self.ctx = ctx
-        self.data_table_list = ctx['interface']['data_line']
+        self.index = ctx['interface']['index']
+        self.table_list = ctx['interface']['data_line']
 
     def __repr__(self):
         return (
@@ -28,62 +29,46 @@ class SqliteWriter:
         """"""
         if DEBUG: logger.debug(f"db_writer.save_data(tuple_list={tuple_list})")
 
-        with SqliteConnectManager(ctx=self.ctx, mode='rw') as db:
+        with SqliteConnectManager(ctx=self.ctx, mode='rwc') as db:
             for row in tuple_list:
                 symbol = type(row).__name__  # ticker symbol for current data
-                index = row.Index  # index for current row (tuple 'Date' field)
-                data_table_list = row._fields[1:]  # data from row excluding 'Date' field (index)
+                date = row.Index  # index for current row (tuples 'Date' field)
+                table_list = row._fields[1:]  # data from row excluding 'Date' field
+                # for i, table in self.table_list:
                 try:
-                    # for table in self.data_table_list:
-                    for table in data_table_list:
+                    for table in table_list:
                         value = getattr(row, table)
-                        # if DEBUG: logger.debug(f"{symbol} {type(symbol)} {table} {type(table)} Date: {index} {type(index)} value: {value} {type(value)}")
-                        if DEBUG: logger.debug(f"\nINSERT OR REPLACE INTO {table} (Date, {symbol}) VALUES ({index}, {value})")
-                        query = f"INSERT OR REPLACE INTO {table} (Date, {symbol}) VALUES (?, ?)"
-                        db.cursor.execute(query, (index, value))
+                        # query = f"INSERT OR REPLACE INTO {table} (Date, {symbol}) VALUES (?, ?)"
+                        if self.index == 0:
+                            query = f"INSERT INTO {table} (Date, {symbol}) VALUES (?, ?)"
+                            db.cursor.execute(query, (date, value))
+                        else:
+                            db.cursor.execute(f"UPDATE {table} SET {symbol} = ? WHERE Date = {date}", (value,))
                 except db.sqlite3.Error as e:
-                    if DEBUG: logger.debug(f"ERROR, {symbol} {table.lower()} {e}")
+                    if DEBUG: logger.debug(f" {e}")
 
-        # with SqliteConnectManager(db_path=self.db_path, mode='rwc') as db:
-        #     for row in close_location_value(gen):
-        #         table = {type(row).__name__.lower()}.pop()
-        #         symbol = {row.symbol}.pop()
-        #         date = {row.date}.pop()
-        #         clv = {row.clv}.pop()
-        #         if not bool(idx):
-        #             db.cursor.execute(f'''
-        #                 INSERT INTO {table} (Date, {symbol})
-        #                 VALUES (?, ?)''', (date, clv)
-        #             )
-        #         else:
-        #             db.cursor.execute(f'''
-        #                 UPDATE {table} SET {symbol} = ?
-        #                 WHERE Date = {date}''', (clv,)
-        #             )
 
 def sqlite_create_database(ctx:dict)->None:
     """Create sqlite3 database. Tables are data lines, columns are ticker symbols."""
     if DEBUG: logger.debug(f"create_database(ctx={type(ctx)})")
 
     with SqliteConnectManager(ctx=ctx, mode='rwc') as db:
-        # create table for each data line
-        for table in ctx['interface']['data_line']:
-            db.cursor.execute(f'''
-                CREATE TABLE IF NOT EXISTS {table.lower()} (
-                    Date    INTEGER    NOT NULL,
-                    PRIMARY KEY (Date)
-                )
-                WITHOUT ROWID
-            ''')
-            # add symbol column to table
-            try:
+        try:  # create table for each data line
+            for table in ctx['interface']['data_line']:
+                db.cursor.execute(f'''
+                    CREATE TABLE IF NOT EXISTS {table.lower()} (
+                        Date    INTEGER    NOT NULL,
+                        PRIMARY KEY (Date)
+                    )
+                    WITHOUT ROWID
+                ''')
+                # add symbol column to table
                 for col in ctx['interface']['arguments']:
                     db.cursor.execute(f'''
                         ALTER TABLE {table} ADD COLUMN {col} INTEGER
                     ''')
-            except db.sqlite3.Error as e:
-                # logger.debug(f"ERROR, table '{table.lower()}' {e}")
-                pass
+        except Exception as e:
+            if DEBUG: logger.debug(f" {e}")
 
     if not DEBUG: print(f" created db: '{db.db_path}'")
 
@@ -93,5 +78,4 @@ def verify_data_folder_exists(ctx:dict)->None:
     from pathlib import Path
 
     if DEBUG: logger.debug(f"verify_data_folder_exists(ctx={type(ctx)})")
-
     Path(f"{ctx['default']['work_dir']}/data").mkdir(parents=True, exist_ok=True)

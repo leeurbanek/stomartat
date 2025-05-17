@@ -68,5 +68,6 @@ def cli(ctx, arguments, data_line):
         # create sqlite database
         utils.sqlite_create_database(ctx=ctx)
 
-        for symbol in ctx['interface']['arguments']:
+        for index, symbol in enumerate(ctx['interface']['arguments']):
+            ctx['interface']['index'] = index
             client.get_ohlc_data(ctx=ctx, symbol=symbol)

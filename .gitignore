@@ -172,6 +172,7 @@ x*.*
 beta*.*
 *.bak
 *.log
+debug.*
 
 #.adblock_link
 #*.sqlite3

@@ -39,6 +39,7 @@ class DataProcessor:
         for l, line in enumerate(self.line):
             eval(f"self._add_{line.lower()}_series({l})")
 
+        if DEBUG: logger.debug(f"process_dataframe(self)-> {self.df}")
         return self.df
 
 

@@ -89,7 +89,6 @@ class SqliteConnectManager:
                 detect_types=self.sqlite3.PARSE_DECLTYPES | self.sqlite3.PARSE_COLNAMES, uri=True
             )
             self.cursor = self.connection.cursor()
-            # if DEBUG: logger.debug(f"{self.__class__.__name__} {self.cursor}")
             if DEBUG: logger.debug(f"cursor: {self.cursor}")
 
             return self
