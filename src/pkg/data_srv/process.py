@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 class DataProcessor:
     """"""
     def __init__(self, ctx:dict, data:tuple):
-        # self.line = sorted(list(ctx['data_service']['data_line'].split(' ')))
         self.line = ctx['interface']['data_line']
         self.symbol = data[0]
         self.data = data[1]
@@ -33,13 +32,11 @@ class DataProcessor:
 
     def process_dataframe(self):
         """"""
-        if DEBUG: logger.debug(f"{type(self)}")
-
         # add columns to df for price, volume, etc.
         for l, line in enumerate(self.line):
             eval(f"self._add_{line.lower()}_series({l})")
 
-        if DEBUG: logger.debug(f"process_dataframe(self)-> {self.df}")
+        if DEBUG: logger.debug(f"process_dataframe(self)-> {type(self.df)}")
         return self.df
 
 

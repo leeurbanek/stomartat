@@ -83,4 +83,8 @@ def cli(ctx, arguments, data_line, target_data):
 
         for index, symbol in enumerate(ctx['interface']['arguments']):
             ctx['interface']['index'] = index
-            # client.get_ohlc_data(ctx=ctx, symbol=symbol)
+            client.fetch_indicator_data(ctx=ctx, symbol=symbol)
+
+        if DEBUG: logger.debug(f"fetch_target_data(ctx={ctx})")
+        if target_data != 'None':
+            client.fetch_target_data(ctx=ctx)
