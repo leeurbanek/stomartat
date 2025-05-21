@@ -16,13 +16,6 @@ def fetch_indicator_data(ctx:dict, symbol:str)->None:
 
     # select data provider and get data
     data = _select_data_provider(ctx=ctx, symbol=symbol)
-    # if DEBUG: logger.debug(f"{data}")
-    # if ctx['data_service']['data_provider'] == "tiingo":
-    #     from pkg.data_srv.reader import TiingoReader
-    #     use_tiingo = TiingoReader(ctx=ctx)
-    #     data = use_tiingo.data_reader(symbol=symbol)
-    # elif ctx['data_service']['data_provider'] == "yahoo":
-    #     pass
 
     # create price, volume, etc. dataframe for one symbol
     df = _create_dataframe_for_symbol(ctx=ctx, data=data)
