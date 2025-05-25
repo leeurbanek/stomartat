@@ -111,6 +111,7 @@ class WebScraper:
 
         for symbol in self.symbol:
             for period in self.period:
+                if not DEBUG: print(f"  fetching {symbol} {period}...")
                 mod_url = self._modify_query_period_and_symbol(period=period, symbol=symbol)
                 self._get_img_src_convert_bytes_to_png_and_save(url=mod_url, period=period, symbol=symbol)
 
@@ -142,10 +143,7 @@ class WebScraper:
         """Get the chart image source and convert the bytes to
         a .png image then save to the chart work directory.
         """
-        if DEBUG:
-            logger.debug(f"_get_img_src_convert_bytes_to_png_and_save(url={url} {type(url)})")
-        if not DEBUG:
-            print(f"   {symbol} {period.lower()}... ")
+        if DEBUG: logger.debug(f"_get_img_src_convert_bytes_to_png_and_save(url={url} {type(url)})")
 
         image_src = self.http.request("GET", url, headers={"User-agent": "Mozilla/5.0"})
         image = Image.open(io.BytesIO(image_src.data)).convert("RGB")
@@ -155,10 +153,7 @@ class WebScraper:
         """Use urllib.parse to modify the default query parameters
         with new period, symbol.
         """
-        if DEBUG:
-            logger.debug(
-                f"_modify_query_period_and_symbol(period={period} {type(period)}, symbol={symbol} {type(symbol)})"
-            )
+        if DEBUG: logger.debug(f"_modify_query_period_and_symbol(period={period} {type(period)}, symbol={symbol} {type(symbol)})")
 
         parsed_url = urlparse(url=self.url)
         query_dict = parse_qs(parsed_url.query)

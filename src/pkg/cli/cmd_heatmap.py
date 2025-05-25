@@ -42,9 +42,9 @@ def cli(ctx, arguments):
 
     if DEBUG: logger.debug(f'cli(ctx={ctx})')
 
-    if click.confirm(f"Downloading: {ctx['interface']['arguments']}\n Do you want to continue?"):
+    if click.confirm(f" Downloading: {ctx['interface']['arguments']}\n Do you want to continue?"):
         # Download heatmaps
         from pkg.chart_srv import client
-        client.get_heatmap(ctx)
+        client.begin_chart_download(ctx)
     else:  # Print default message
         click.echo("Goodby.")

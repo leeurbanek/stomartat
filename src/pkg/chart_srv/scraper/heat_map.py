@@ -54,6 +54,7 @@ class WebScraper:
         opt.page_load_strategy = "none"
 
         for period in self.period:
+            if not DEBUG: print(f"  fetching heatmap {period}...")
             try:
                 # driver = Chrome(options=opt)
                 driver = Firefox(options=opt)

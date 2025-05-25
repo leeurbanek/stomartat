@@ -1,6 +1,8 @@
 """src/pkg/cli/cmd_data.py"""
 import logging
 
+from time import sleep
+
 import click
 
 from pkg import DEBUG
@@ -56,20 +58,6 @@ def cli(ctx, arguments):
     )
     ctx['interface']['target_data'] = sorted([td.upper() for td in target_data.split(' ')])
 
-    # # Add 'data_line' to 'interface' ctx
-    # if data_line:  # use custom values
-    #     ctx['interface']['data_line'] = sorted(list(data_line.split(' ')))
-    # else:  # use default values
-    #     ctx['interface']['data_line'] = sorted(list(ctx['data_service']['data_line'].split(' ')))
-
-    # # Add 'target_data' to 'interface' ctx
-    # if target_data:  # use custom value
-
-    #     ctx['interface']['target_data'] = sorted(list(target_data.split(' ')))
-    # else:  # use default values
-    #     ctx['interface']['target_data'] = sorted(list(ctx['data_service']['target_data'].split(' ')))
-    #     if DEBUG: logger.debug(f"target_data: {ctx['interface']['target_data']} {type({ctx['interface']['target_data']})}")
-
     if click.confirm(f"* Saving {ctx['interface']['data_line']}\n  for {ctx['interface']['arguments']}\n  to '{ctx['interface']['database']}, using target {ctx['interface']['target_data']}.\n  Do you want to continue?"):
         # download data
         from pkg.data_srv import client, utils
@@ -83,12 +71,23 @@ def cli(ctx, arguments):
         # create sqlite database
         utils.sqlite_create_database(ctx=ctx)
 
+        if not DEBUG: print('\n Begin download')
+        # get indicator data
         for index, symbol in enumerate(ctx['interface']['arguments']):
-            # if DEBUG: logger.debug(f"index: {index}, symbol: {symbol}")
+            if not DEBUG: print(f"  fetching indicator data for {symbol}...")
+            sleep(2)
             ctx['interface']['index'] = index
-        #     client.fetch_indicator_data(ctx=ctx, symbol=symbol)
+            client.fetch_indicator_data(ctx=ctx, symbol=symbol)
+        if not DEBUG: print(' finished!')
 
         if DEBUG: logger.debug(f"fetch_target_data(ctx={ctx})")
+        # get target ohlc data
         if ctx['interface']['target_data'] != 'None':
-            for symbol in ctx['interface']['target_data']:
+            for index, symbol in enumerate(ctx['interface']['target_data']):
+                if not DEBUG: print(f"  fetching target data for {symbol}...")
+                sleep(2)
+                ctx['interface']['index'] = index
                 client.fetch_target_data(ctx=ctx, symbol=symbol)
+            if not DEBUG: print(' finished!')
+
+        if not DEBUG: print(f" Saved data to '{ctx['default']['work_dir']}{ctx['interface']['command']}/{ctx['interface']['database']}'\n")

@@ -64,9 +64,9 @@ def cli(ctx, arguments, opt_trans):
 
     if DEBUG: logger.debug(f'cli(ctx={ctx})')
 
-    if click.confirm(f"Downloading: {ctx['interface']['arguments']}, {ctx['interface']['opt_trans']}\n Do you want to continue?"):
+    if click.confirm(f" Downloading: {ctx['interface']['arguments']}, {ctx['interface']['opt_trans']}\n Do you want to continue?"):
         # Download charts
         from pkg.chart_srv import client
-        client.get_stockchart(ctx)
+        client.begin_chart_download(ctx)
     else:  # Print default message
         click.echo("Goodby.")

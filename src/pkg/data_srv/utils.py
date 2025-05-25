@@ -108,7 +108,7 @@ def sqlite_create_database(ctx:dict)->None:
         except Exception as e:
             if DEBUG: logger.debug(f" {e}")
 
-    if not DEBUG: print(f" created db: '{db.db_path}'")
+    if not DEBUG: print(f"\n Created db: '{db.db_path}'")
 
 
 def verify_data_folder_exists(ctx:dict)->None:

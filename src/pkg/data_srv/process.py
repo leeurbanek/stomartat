@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class DataProcessor:
-    """"""
+    """Convert ohlc data into average price, volume, etc. returns a dataframe."""
     def __init__(self, ctx:dict, data:tuple):
         self.line = ctx['interface']['data_line']
         self.symbol = data[0]
@@ -31,7 +31,7 @@ class DataProcessor:
             )
 
     def process_dataframe(self):
-        """"""
+        """Direct workflow of DataProcessor"""
         # add columns to df for price, volume, etc.
         for l, line in enumerate(self.line):
             eval(f"self._add_{line.lower()}_series({l})")
