@@ -77,7 +77,7 @@ def sqlite_create_database(ctx:dict)->None:
 
     with SqliteConnectManager(ctx=ctx, mode='rwc') as db:
         try:
-            # create table for each data line
+            # create table for each indicator (data line)
             for table in ctx['interface']['data_line']:
                 db.cursor.execute(f'''
                     CREATE TABLE {table.lower()} (
@@ -91,19 +91,20 @@ def sqlite_create_database(ctx:dict)->None:
                     db.cursor.execute(f'''
                         ALTER TABLE {table} ADD COLUMN {col} INTEGER
                     ''')
-            # create table for target symbol ohlc prices
-            db.cursor.execute(f'''
-                CREATE TABLE {ctx["interface"]['target_data']} (
-                    Date      INTEGER    NOT NULL,
-                    Open      INTEGER    NOT NULL,
-                    High      INTEGER    NOT NULL,
-                    Low       INTEGER    NOT NULL,
-                    Close     INTEGER    NOT NULL,
-                    Volume    INTEGER    NOT NULL,
-                    PRIMARY KEY (Date)
-                )
-                WITHOUT ROWID
-            ''')
+            # create table for target symbol (ohlc prices)
+            for table in ctx['interface']['target_data']:
+                db.cursor.execute(f'''
+                    CREATE TABLE {table} (
+                        Date      INTEGER    NOT NULL,
+                        Open      INTEGER    NOT NULL,
+                        High      INTEGER    NOT NULL,
+                        Low       INTEGER    NOT NULL,
+                        Close     INTEGER    NOT NULL,
+                        Volume    INTEGER    NOT NULL,
+                        PRIMARY KEY (Date)
+                    )
+                    WITHOUT ROWID
+                ''')
         except Exception as e:
             if DEBUG: logger.debug(f" {e}")
 
