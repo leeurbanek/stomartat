@@ -73,12 +73,12 @@ DESCRIPTION
     days. Add an integer argument to change the number of
     days in the lookback period.
 """)
-# # data_srv, change the data provider (alphavantage, tiingo, yahoo)
-# @click.option(
-#     '--data-provider', 'opt_trans', flag_value='data_provider', help=f"""
-#     Use without arguments to display the current data
-#     provider. Valid options are 'tiingo'.
-# """)
+# data_srv, change the data provider (alphavantage, tiingo, yahoo)
+@click.option(
+    '--data-provider', 'opt_trans', flag_value='data_provider', help=f"""
+    Use without arguments to display the current data
+    provider. Valid options are 'alphavantage', 'tiingo' 'yfinance'.
+""")
 # app_default, switch the debug option on/off
 @click.option(
     '--debug', 'opt_trans', flag_value='debug', help=f"""
@@ -231,20 +231,20 @@ def cli(ctx, arguments, opt_trans):
             else:
                 click.echo(f" Valid arguments are:\n {valid_arg}")
 
-    # elif opt_trans == 'data_provider':
-    #     cur_val = ctx['data_service']['data_provider']
-    #     valid_arg = ['tiingo',]
-    #     # new_value = None
+    elif opt_trans == 'data_provider':
+        cur_val = ctx['data_service']['data_provider']
+        valid_arg = ['alphavantage', 'tiingo', 'yfinance']
+        new_value = None
 
-    #     if not arguments:
-    #         click.echo(f" Current data provider: {cur_val}\n Valid arguments are: {valid_arg}")
-    #     else:
-    #         new_value = utils.get_arg_value(ctx=ctx)
-    #         # Check for valid arguments
-    #         if new_value in valid_arg:
-    #             # Update webdriver
-    #             if click.confirm(f" Replacing {cur_val} with {new_value}.\n Do you wand to continue?"):
-    #                 # Add config info to context object
+        if not arguments:
+            click.echo(f" Current data provider: {cur_val}\n Valid arguments are: {valid_arg}")
+        else:
+            new_value = utils.get_arg_value(ctx=ctx)
+            # Check for valid arguments
+            # if new_value in valid_arg:
+                # Update data provider
+                # if click.confirm(f" Replacing {cur_val} with {new_value}.\n Do you wand to continue?"):
+                #     # Add config info to context object
     #                 ctx['interface']['config_file'] = 'cfg_data'
     #                 ctx['interface']['section'] = 'data_service'
     #                 ctx['interface']['new_value'] = new_value

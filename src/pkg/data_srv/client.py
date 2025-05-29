@@ -16,7 +16,6 @@ def fetch_indicator_data(ctx:dict, symbol:str)->None:
 
     # select data provider and get data
     data = _select_data_provider(ctx=ctx, symbol=symbol)
-    if DEBUG: logger.debug(f"_select_data_provider(ctx={type(ctx)} symbol={symbol}->{data})")
 
     # create price, volume, etc. dataframe for one symbol
     df = _create_dataframe_for_symbol(ctx=ctx, data=data)
@@ -47,10 +46,24 @@ def _create_dataframe_for_symbol(ctx:dict, data:tuple)->None:
 
 
 def _select_data_provider(ctx:dict, symbol:str)->object:
-    if ctx['data_service']['data_provider'] == "tiingo":
-        from pkg.data_srv.reader import TiingoReader
-        use_tiingo = TiingoReader(ctx=ctx)
-        data = use_tiingo.data_reader(symbol=symbol)
-    elif ctx['data_service']['data_provider'] == "yahoo":
+    """"""
+    if DEBUG: logger.debug(f"_select_data_provider(ctx={ctx} symbol={symbol})")
+    # provider_dict = {
+    #     'alphavantage': 'AlphaVantageReader',
+    #     'tiingo': 'TiingoReader',
+    #     'yfinance': 'YahooFinanceReader'
+    # }
+    # provider = provider_dict[ctx['data_service']['data_provider']]
+    # from pkg.data_srv.reader import provider
+
+    if ctx['data_service']['data_provider'] == "alphavantage":
         pass
+    elif ctx['data_service']['data_provider'] == "tiingo":
+        from pkg.data_srv.reader import TiingoReader
+        reader = TiingoReader(ctx=ctx)
+        data = reader.get_symbol_df_tuple(symbol=symbol)
+    elif ctx['data_service']['data_provider'] == "yfinance":
+        from pkg.data_srv.reader import YahooFinanceReader
+        reader = YahooFinanceReader(ctx=ctx)
+
     return data

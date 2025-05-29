@@ -1,99 +1,64 @@
 """data/data.py\n
-ctx: dict,\n
-dict_list_eem: ,\n
-dict_list_iwm: ,\n
-parse_dict_eem: ,\n
-parse_dict_iwm: ,\n
-df_tuple_eem: ,\n
-df_tuple_iwm:
+ctx_alphavantage: dict,\n
+ctx_tiingo: dict,\n
+ctx_yfinance: dict,\n
+raw_alphavantage: list[dict],\n
+raw_tiingo: list[dict],\n
+raw_yfinance: dict,\n
+parsed_alphavantage: dict,\n
+parsed_tiingo: dict,\n
+parsed_yfinance: dict,\n
 """
 
-ctx = {
-    'default': {
-        'debug': True,
-        'work_dir': '/home/la/dev/stomartat/temp/',
-        'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini',
-        'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini',
-        'cfg_main': '/home/la/dev/stomartat/src/config.ini'
-    },
-    'interface': {
-        'command': 'data',
-        'arguments': ['EEM', 'IWM'],
-        'database': 'default.db'
-    },
-    'chart_service': {
-        'adblock': '',
-        'chart_list': 'EEM FXI IWM DBC HYG SPY IAU LQD MOO TIP IYR IYZ XLB XLE XLF XLI XLK XLP XLU XLV XLY BOTZ GBTC LIT XAR',
-        'heatmap_list': '1W 1M 3M 6M',
-        'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL',
-        'url_heatmap': 'https://stockanalysis.com/markets/heatmap/',
-        'webdriver': 'geckodriver'
-    },
-    'data_service': {
-        'data_list': 'EEM IWM',
-        'data_lookback': '14',
-        'data_frequency': 'daily',
-        'data_provider': 'tiingo',
-        'url_alphavantage': '',
-        'url_tiingo': 'https://api.tiingo.com/tiingo',
-        'url_yahoo': ''
+ctx_alphavantage = {
+    'default': {'debug': True, 'work_dir': '/home/la/dev/stomartat/temp/', 'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini', 'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini', 'cfg_main': '/home/la/dev/stomartat/src/config.ini'},
+    'interface': {'command': 'data', 'data_line': ['CLOP', 'CLV', 'CWAP', 'HILO', 'VOLUME'], 'target_data': ['LQD'], 'arguments': ['EEM', 'IWM'], 'database': 'default.db', 'index': 0},
+    'chart_service': {'adblock': '', 'chart_list': 'AFK ASEA', 'heatmap_list': '1W 1M 3M 6M', 'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL', 'url_heatmap': 'https://stockanalysis.com/markets/heatmap/', 'webdriver': 'geckodriver'},
+    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'alphavantage', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo'}
+}
+ctx_tiingo = {
+    'default': {'debug': True, 'work_dir': '/home/la/dev/stomartat/temp/', 'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini', 'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini', 'cfg_main': '/home/la/dev/stomartat/src/config.ini'},
+    'interface': {'command': 'data', 'data_line': ['CLOP', 'CLV', 'CWAP', 'HILO', 'VOLUME'], 'target_data': ['LQD'], 'arguments': ['EEM', 'IWM'], 'database': 'default.db', 'index': 0},
+    'chart_service': {'adblock': '', 'chart_list': 'AFK ASEA', 'heatmap_list': '1W 1M 3M 6M', 'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL', 'url_heatmap': 'https://stockanalysis.com/markets/heatmap/', 'webdriver': 'geckodriver'},
+    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'tiingo', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo'}
+}
+ctx_yfinance = {
+    'default': {'debug': True, 'work_dir': '/home/la/dev/stomartat/temp/', 'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini', 'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini', 'cfg_main': '/home/la/dev/stomartat/src/config.ini'},
+    'interface': {'command': 'data', 'data_line': ['CLOP', 'CLV', 'CWAP', 'HILO', 'VOLUME'], 'target_data': ['LQD'], 'arguments': ['EEM', 'IWM'], 'database': 'default.db', 'index': 0},
+    'chart_service': {'adblock': '', 'chart_list': 'AFK ASEA', 'heatmap_list': '1W 1M 3M 6M', 'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL', 'url_heatmap': 'https://stockanalysis.com/markets/heatmap/', 'webdriver': 'geckodriver'},
+    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'yfinance', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo'}
+}
+raw_alphavantage = {
+    'Meta Data': {'1. Information': 'Daily Prices (open, high, low, close) and Volumes', '2. Symbol': 'IWM', '3. Last Refreshed': '2025-05-27', '4. Output Size': 'Compact', '5. Time Zone': 'US/Eastern'},
+    'Time Series (Daily)': {
+        '2025-05-23': {'1. open': '199.7800', '2. high': '203.2550', '3. low': '199.6500', '4. close': '202.5600', '5. volume': '29114602'},
+        '2025-05-22': {'1. open': '202.2900', '2. high': '204.3700', '3. low': '201.5300', '4. close': '203.2000', '5. volume': '31831347'},
+        '2025-05-21': {'1. open': '206.6300', '2. high': '207.6100', '3. low': '202.8400', '4. close': '203.2100', '5. volume': '36704354'},
+        '2025-05-20': {'1. open': '208.6600', '2. high': '209.7550', '3. low': '207.9600', '4. close': '209.0800', '5. volume': '22053136'}
     }
 }
-
-dict_list_eem = [
-    {'date': '2025-04-21T00:00:00.000Z', 'close': 41.91, 'high': 42.215, 'low': 41.6112, 'open': 42.17, 'volume': 16440713, 'adjClose': 41.91, 'adjHigh': 42.215, 'adjLow': 41.6112, 'adjOpen': 42.17, 'adjVolume': 16440713, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-22T00:00:00.000Z', 'close': 42.54, 'high': 42.825, 'low': 42.3401, 'open': 42.375, 'volume': 25716059, 'adjClose': 42.54, 'adjHigh': 42.825, 'adjLow': 42.3401, 'adjOpen': 42.375, 'adjVolume': 25716059, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-23T00:00:00.000Z', 'close': 43.03, 'high': 43.52, 'low': 42.98, 'open': 43.29, 'volume': 24787365, 'adjClose': 43.03, 'adjHigh': 43.52, 'adjLow': 42.98, 'adjOpen': 43.29, 'adjVolume': 24787365, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-24T00:00:00.000Z', 'close': 43.53, 'high': 43.58, 'low': 43.1, 'open': 43.15, 'volume': 28843537, 'adjClose': 43.53, 'adjHigh': 43.58, 'adjLow': 43.1, 'adjOpen': 43.15, 'adjVolume': 28843537, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-25T00:00:00.000Z', 'close': 43.45, 'high': 43.45, 'low': 43.135, 'open': 43.22, 'volume': 18363715, 'adjClose': 43.45, 'adjHigh': 43.45, 'adjLow': 43.135, 'adjOpen': 43.22, 'adjVolume': 18363715, 'divCash': 0.0, 'splitFactor': 1.0}
+raw_tiingo = [
+    {'date': '2025-05-21T00:00:00.000Z', 'close': 203.21, 'high': 207.61, 'low': 202.84, 'open': 206.63, 'volume': 36704354, 'adjClose': 203.21, 'adjHigh': 207.61, 'adjLow': 202.84, 'adjOpen': 206.63, 'adjVolume': 36704354, 'divCash': 0.0, 'splitFactor': 1.0},
+    {'date': '2025-05-22T00:00:00.000Z', 'close': 203.2, 'high': 204.37, 'low': 201.53, 'open': 202.29, 'volume': 31831347, 'adjClose': 203.2, 'adjHigh': 204.37, 'adjLow': 201.53, 'adjOpen': 202.29, 'adjVolume': 31831347, 'divCash': 0.0, 'splitFactor': 1.0},
+    {'date': '2025-05-23T00:00:00.000Z', 'close': 202.56, 'high': 203.255, 'low': 199.65, 'open': 199.78, 'volume': 29114602, 'adjClose': 202.56, 'adjHigh': 203.255, 'adjLow': 199.65, 'adjOpen': 199.78, 'adjVolume': 29114602, 'divCash': 0.0, 'splitFactor': 1.0}
 ]
-
-dict_list_iwm = [
-    {'date': '2025-04-21T00:00:00.000Z', 'close': 182.74, 'high': 185.29, 'low': 180.765, 'open': 185.0, 'volume': 26018999, 'adjClose': 182.74, 'adjHigh': 185.29, 'adjLow': 180.765, 'adjOpen': 185.0, 'adjVolume': 26018999, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-22T00:00:00.000Z', 'close': 187.47, 'high': 188.1, 'low': 184.55, 'open': 185.15, 'volume': 34477053, 'adjClose': 187.47, 'adjHigh': 188.1, 'adjLow': 184.55, 'adjOpen': 185.15, 'adjVolume': 34477053, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-23T00:00:00.000Z', 'close': 190.25, 'high': 195.51, 'low': 189.84, 'open': 192.92, 'volume': 44866133, 'adjClose': 190.25, 'adjHigh': 195.51, 'adjLow': 189.84, 'adjOpen': 192.92, 'adjVolume': 44866133, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-24T00:00:00.000Z', 'close': 194.06, 'high': 194.37, 'low': 189.89, 'open': 190.76, 'volume': 29820132, 'adjClose': 194.06, 'adjHigh': 194.37, 'adjLow': 189.89, 'adjOpen': 190.76, 'adjVolume': 29820132, 'divCash': 0.0, 'splitFactor': 1.0},
-    {'date': '2025-04-25T00:00:00.000Z', 'close': 194.12, 'high': 194.26, 'low': 191.55, 'open': 192.72, 'volume': 25028968, 'adjClose': 194.12, 'adjHigh': 194.26, 'adjLow': 191.55, 'adjOpen': 192.72, 'adjVolume': 25028968, 'divCash': 0.0, 'splitFactor': 1.0}
-]
-
-parse_dict_eem = {
-    739362: [4217, 4222, 4161, 4191, 16440713],
-    739363: [4238, 4282, 4234, 4254, 25716059],
-    739364: [4329, 4352, 4298, 4303, 24787365],
-    739365: [4315, 4358, 4310, 4353, 28843537],
-    739366: [4322, 4345, 4314, 4345, 18363715]
+raw_yfinance = {
+    "1747800000000":{"Open":206.6300048828,"High":207.6100006104,"Low":202.8399963379,"Close":203.2100067139,"Volume":36704400,"Dividends":0.0,"Stock Splits":0.0,"Capital Gains":0.0},
+    "1747886400000":{"Open":202.2899932861,"High":204.3699951172,"Low":201.5299987793,"Close":203.1999969482,"Volume":31831300,"Dividends":0.0,"Stock Splits":0.0,"Capital Gains":0.0},
+    "1747972800000":{"Open":199.7799987793,"High":203.2599945068,"Low":199.6499938965,"Close":202.5599975586,"Volume":29099500,"Dividends":0.0,"Stock Splits":0.0,"Capital Gains":0.0}
 }
-
-parse_dict_iwm = {
-    739362: [18500, 18529, 18076, 18274, 26018999],
-    739363: [18515, 18810, 18455, 18747, 34477053],
-    739364: [19292, 19551, 18984, 19025, 44866133],
-    739365: [19076, 19437, 18989, 19406, 29820132],
-    739366: [19272, 19426, 19155, 19412, 25028968]
+parsed_alphavantage = {
+    1747800000: [20663, 20761, 20284, 20321, 36704354],
+    1747886400: [20229, 20437, 20153, 20320, 31831347],
+    1747972800: [19978, 20326, 19965, 20256, 29114602]
 }
-
-# df_tuple_eem = ('EEM',         open  high   low  close    volume
-# date
-# 739362  4217  4222  4161   4191  16440713
-# 739363  4238  4282  4234   4254  25716059
-# 739364  4329  4352  4298   4303  24787365
-# 739365  4315  4358  4310   4353  28843537
-# 739366  4322  4345  4314   4345  18363715
-# 739369  4351  4358  4332   4353  11002235
-# 739370  4359  4376  4356   4365  12809121
-# 739371  4359  4383  4340   4376  20928833
-# 739372  4393  4396  4370   4375  14740506
-# 739373  4515  4517  4484   4500  33945930)
-
-# df_tuple_iwm = ('IWM',          open   high    low  close    volume
-# date
-# 739362  18500  18529  18076  18274  26018999
-# 739363  18515  18810  18455  18747  34477053
-# 739364  19292  19551  18984  19025  44866133
-# 739365  19076  19437  18989  19406  29820132
-# 739366  19272  19426  19155  19412  25028968
-# 739369  19450  19615  19253  19494  22482254
-# 739370  19447  19686  19301  19609  20118155
-# 739371  19314  19548  19072  19486  29046138
-# 739372  19571  19767  19374  19607  33169717
-# 739373  19833  20121  19818  20048  30201787)
+parsed_tiingo = {
+    1747800000: [20663, 20761, 20284, 20321, 36704354],
+    1747886400: [20229, 20437, 20153, 20320, 31831347],
+    1747972800: [19978, 20326, 19965, 20256, 29114602]
+    }
+parsed_yfinance = {
+    1747800000: [20663, 20761, 20284, 20321, 36704400],
+    1747886400: [20229, 20437, 20153, 20320, 31831300],
+    1747972800: [19978, 20326, 19965, 20256, 29099500]
+}

@@ -1,13 +1,14 @@
-# python -m unittest test/test_ctx_mgr.py
+# python -m unittest test/test_ctx_mgr.py -v
 import time
 import unittest
 
-from pkg.ctx_mgr import DatabaseConnectionManager, SpinnerManager
+from pkg.ctx_mgr import SpinnerManager, SqliteConnectManager
+from test.data import ctx
 
 
 class SpinnerManagerTest(unittest.TestCase):
     def test_spinner_manager(self):
-        with SpinnerManager(debug=True) as spinner:
+        with SpinnerManager() as spinner:
             time.sleep(2)  # some long-running operation
 
 
@@ -19,7 +20,7 @@ class ContextManagerTest(unittest.TestCase):
         ]
 
     def test_db_ctx_mgr_in_memory_mode(self):
-        with DatabaseConnectionManager() as db:
+        with SqliteConnectManager(ctx=ctx, mode='memory') as db:
             db.cursor.execute(f'''
                 CREATE TABLE {self.db_table} (
                     Date    DATE        NOT NULL,
