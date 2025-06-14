@@ -30,8 +30,8 @@ DESCRIPTION
 @click.pass_obj
 def cli(ctx, arguments):
     """Run data command"""
-    if DEBUG:
-        logger.debug(f"start_cli(ctx={type(ctx)}, arguments={arguments})")
+    if DEBUG: logger.debug(f"start_cli(ctx={type(ctx)}, arguments={arguments})")
+
     ctx['interface']['command'] = 'data'
     ctx['interface']['data_line'] = ctx['data_service']['data_line']
     ctx['interface']['target_data'] = ctx['data_service']['target_data']
@@ -48,39 +48,31 @@ def cli(ctx, arguments):
             f"* Using database 'default.db'. Type a new database name to change,\n  press Enter to accept", default="default.db"
         )
 
-    data_line = click.prompt(
-        f"* Using data line '{ctx['data_service']['data_line']}'. Type a new value to change,\n  press Enter to accept", default=ctx['data_service']['data_line']
-    )
+    data_line = click.prompt(f"* Using data line '{ctx['data_service']['data_line']}'. Type a new value to change,\n  press Enter to accept", default=ctx['data_service']['data_line'])
     ctx['interface']['data_line'] = sorted([td.upper() for td in data_line.split(' ')])
 
-    target_data = click.prompt(
-        f"* Using target data '{ctx['data_service']['target_data']}'. Type a new value to change,\n  type 'None' to skip, press Enter to accept", default=ctx['data_service']['target_data']
-    )
+    target_data = click.prompt(f"* Using target data '{ctx['data_service']['target_data']}'. Type a new value to change,\n  type 'None' to skip, press Enter to accept", default=ctx['data_service']['target_data'])
     ctx['interface']['target_data'] = sorted([td.upper() for td in target_data.split(' ')])
 
     if click.confirm(f"* Saving {ctx['interface']['data_line']}\n  for {ctx['interface']['arguments']}\n  to '{ctx['interface']['database']}, using target {ctx['interface']['target_data']}.\n  Do you want to continue?"):
+
         # download data
         from pkg.data_srv import client, utils
 
-        if DEBUG: logger.debug(
-            f"cli(ctx={ctx})"
-        )
-        # check 'data' folder exists in users 'work_dir', if not create folder
-        utils.verify_data_folder_exists(ctx=ctx)
+        # # check 'data' folder exists in users 'work_dir', if not create folder
+        # utils.verify_data_folder_exists(ctx=ctx)
 
-        # create sqlite database
-        utils.sqlite_create_database(ctx=ctx)
+        # # create sqlite database
+        # utils.sqlite_create_database(ctx=ctx)
 
         if not DEBUG: print('\n Begin download')
         # get indicator data
         for index, symbol in enumerate(ctx['interface']['arguments']):
-            if not DEBUG: print(f"  fetching indicator data for {symbol}...")
-            sleep(2)
+            if not DEBUG: print(f"  fetching data for {symbol}...")
             ctx['interface']['index'] = index
             client.fetch_indicator_data(ctx=ctx, symbol=symbol)
         if not DEBUG: print(' finished!')
 
-        if DEBUG: logger.debug(f"fetch_target_data(ctx={ctx})")
         # get target ohlc data
         if ctx['interface']['target_data'] != 'None':
             for index, symbol in enumerate(ctx['interface']['target_data']):

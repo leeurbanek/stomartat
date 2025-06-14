@@ -14,19 +14,19 @@ ctx_alphavantage = {
     'default': {'debug': True, 'work_dir': '/home/la/dev/stomartat/temp/', 'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini', 'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini', 'cfg_main': '/home/la/dev/stomartat/src/config.ini'},
     'interface': {'command': 'data', 'data_line': ['CLOP', 'CLV', 'CWAP', 'HILO', 'VOLUME'], 'target_data': ['LQD'], 'arguments': ['EEM', 'IWM'], 'database': 'default.db', 'index': 0},
     'chart_service': {'adblock': '', 'chart_list': 'AFK ASEA', 'heatmap_list': '1W 1M 3M 6M', 'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL', 'url_heatmap': 'https://stockanalysis.com/markets/heatmap/', 'webdriver': 'geckodriver'},
-    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'alphavantage', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo'}
+    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'alphavantage', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo', 'url_yfinance': ''}
 }
 ctx_tiingo = {
     'default': {'debug': True, 'work_dir': '/home/la/dev/stomartat/temp/', 'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini', 'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini', 'cfg_main': '/home/la/dev/stomartat/src/config.ini'},
     'interface': {'command': 'data', 'data_line': ['CLOP', 'CLV', 'CWAP', 'HILO', 'VOLUME'], 'target_data': ['LQD'], 'arguments': ['EEM', 'IWM'], 'database': 'default.db', 'index': 0},
     'chart_service': {'adblock': '', 'chart_list': 'AFK ASEA', 'heatmap_list': '1W 1M 3M 6M', 'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL', 'url_heatmap': 'https://stockanalysis.com/markets/heatmap/', 'webdriver': 'geckodriver'},
-    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'tiingo', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo'}
+    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'tiingo', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo', 'url_yfinance': ''}
 }
 ctx_yfinance = {
     'default': {'debug': True, 'work_dir': '/home/la/dev/stomartat/temp/', 'cfg_chart': '/home/la/dev/stomartat/src/pkg/chart_srv/cfg_chart.ini', 'cfg_data': '/home/la/dev/stomartat/src/pkg/data_srv/cfg_data.ini', 'cfg_main': '/home/la/dev/stomartat/src/config.ini'},
     'interface': {'command': 'data', 'data_line': ['CLOP', 'CLV', 'CWAP', 'HILO', 'VOLUME'], 'target_data': ['LQD'], 'arguments': ['EEM', 'IWM'], 'database': 'default.db', 'index': 0},
     'chart_service': {'adblock': '', 'chart_list': 'AFK ASEA', 'heatmap_list': '1W 1M 3M 6M', 'url_stockchart': 'https://stockcharts.com/sc3/ui/?s=AAPL', 'url_heatmap': 'https://stockanalysis.com/markets/heatmap/', 'webdriver': 'geckodriver'},
-    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'yfinance', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo'}
+    'data_service': {'data_frequency': 'daily', 'data_line': 'CLOP CLV CWAP HILO VOLUME', 'data_list': 'EEM IWM', 'data_lookback': '7', 'data_provider': 'yfinance', 'target_data': 'LQD', 'url_alphavantage': 'https://www.alphavantage.co', 'url_tiingo': 'https://api.tiingo.com/tiingo', 'url_yfinance': ''}
 }
 raw_alphavantage = {
     'Meta Data': {'1. Information': 'Daily Prices (open, high, low, close) and Volumes', '2. Symbol': 'IWM', '3. Last Refreshed': '2025-05-27', '4. Output Size': 'Compact', '5. Time Zone': 'US/Eastern'},

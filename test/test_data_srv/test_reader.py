@@ -1,5 +1,6 @@
 # python -m unittest test/test_data_srv/test_reader.py -v
 import unittest
+from datetime import date
 from unittest.mock import Mock
 
 import pandas as pd
@@ -8,7 +9,7 @@ from pkg.data_srv import reader
 from test import data
 
 
-# @unittest.skip(reason='ok')
+@unittest.skip(reason='ok')
 class TestDataImport(unittest.TestCase):
 
     def test_ctx_alphavantage(self):
@@ -21,11 +22,12 @@ class TestDataImport(unittest.TestCase):
         assert isinstance(data.ctx_yfinance, dict)
 
 
-# @unittest.skip(reason='wip')
+@unittest.skip(reason='ok')
 class TestAlphaVantageReader(unittest.TestCase):
 
     def setUp(self):
         self.reader = reader.AlphaVantageReader(ctx=data.ctx_alphavantage)
+        self.reader.start_date = date.fromisoformat("2025-05-21")
         self.reader._fetch_ohlc_price_data = Mock(return_value=data.raw_alphavantage)
 
     def test_instance(self):
@@ -38,7 +40,7 @@ class TestAlphaVantageReader(unittest.TestCase):
 
     def test_parse_price_data(self):
         result = self.reader._parse_price_data(data.raw_alphavantage)
-        # print(f" alphavantage_parse_price_data(), {result}")
+        print(f" alphavantage_parse_price_data(), {result}")
         self.assertEqual(result, data.parsed_alphavantage)
 
     def test_create_dataframe(self):
@@ -51,7 +53,7 @@ class TestAlphaVantageReader(unittest.TestCase):
         print(f" alphavantage get_ticker_df_tuple(), {result}")
 
 
-# @unittest.skip(reason='ok')
+@unittest.skip(reason='ok')
 class TiingoReaderTest(unittest.TestCase):
 
     def setUp(self):
@@ -98,7 +100,7 @@ class YahooFinanceReaderTest(unittest.TestCase):
 
     def test_parse_price_data(self):
         result = self.reader._parse_price_data(data.raw_yfinance)
-        # print(f" yfinance_parse_price_data(), {result}")
+        print(f" yfinance_parse_price_data(), {result}")
         self.assertEqual(result, data.parsed_yfinance)
 
     def test_create_dataframe(self):

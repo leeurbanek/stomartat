@@ -49,6 +49,8 @@ class SqliteWriter:
                             db.cursor.execute(f"UPDATE {table} SET {symbol} = ? WHERE Date = {date}", (value,))
                 except db.sqlite3.Error as e:
                     if DEBUG: logger.debug(f" {e}")
+# with conn:
+#     cur.executemany('insert into Counts (email, count) values (?,?)',Counts)
 
 
     def save_target_data(self, tuple_list:list[tuple])->None:
