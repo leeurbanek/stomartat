@@ -21,6 +21,7 @@ from pkg import DEBUG
 
 load_dotenv()
 
+logging.getLogger("peewee").setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("yfinance").setLevel(logging.WARNING)
@@ -31,10 +32,10 @@ class BaseProcessor:
     """"""
 
     def __init__(self, ctx: dict):
-        self.data_line = ctx["data_service"]["data_line"]
+        self.data_line = ctx["interface"]["data_line"]
         self.data_provider = ctx["data_service"]["data_provider"]
         self.frequency = ctx["data_service"]["data_frequency"]
-        self.index = ctx["interface"]["index"]
+        self.index = None
         self.lookback = int(ctx["data_service"]["data_lookback"])
         self.start_date, self.end_date = self._start_end_date
         self.url = ctx["data_service"][f"url_{self.data_provider}"]
@@ -47,14 +48,14 @@ class BaseProcessor:
         end = datetime.date.today()
         return start, end
 
-    def fetch_and_parce_price_data(self, ticker: str):
+    def download_and_parse_price_data(self, ticker: str):
         """"""
         if DEBUG:
-            logger.debug(f"fetch_and_parce_price_data(self={type(self)}, ticker={ticker})")
+            logger.debug(f"download_and_parse_price_data(self={self}, ticker={ticker})")
 
-        # data_gen = eval(f"_{self.data_provider}_data_generator(ticker=ticker)")
-        # tuple_list = eval(f"_process_{self.data_provider}_data(data_gen=data_gen)")
-        # return tuple_list
+        data_gen = eval(f"self._{self.data_provider}_data_generator(ticker=ticker)")
+        tuple_list = eval(f"self._process_{self.data_provider}_data(data_gen=data_gen)")
+        return tuple_list
 
 
 class AlphaVantageDataProcessor(BaseProcessor):
@@ -76,7 +77,7 @@ class AlphaVantageDataProcessor(BaseProcessor):
             f"api_key_1={self.api_key_1}, "
             f"data_provider={self.data_provider}, "
             f"function={self.function}, "
-            f"index={self.index}, "
+            # f"index={self.index}, "
             f"url={self.url})"
         )
 
@@ -216,7 +217,7 @@ class TiingoDataProcessor(BaseProcessor):
             f"{self.__class__.__name__}("
             f"api_token={self.api_token}, "
             f"frequency={self.frequency}, "
-            f"index={self.index}, "
+            # f"index={self.index}, "
             f"lookback={self.lookback}, "
             f"start_date={self.start_date}, "
         )
@@ -334,23 +335,20 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
     def _yfinance_data_generator(self, ticker: str) -> object:
         """"""
-        if DEBUG:
-            logger.debug(f"_yfinance_data_generator(index={self.index}, ticker={ticker})")
+        if DEBUG: logger.debug(f"_yfinance_data_generator(index={self.index}, ticker={ticker})")
 
         try:
-            yf_ticker = self.yf.Ticker(ticker=ticker)
-            df = yf_ticker.history(start=self.start_date, end=self.end_date, interval=self.interval)
+            yf_data = self.yf.Ticker(ticker=ticker)
+            yf_df = yf_data.history(start=self.start_date, end=self.end_date, interval=self.interval)
         except Exception as e:
             logger.debug(f"*** ERROR *** {e}")
         else:
-            if not DEBUG:
-                print(f" fetching {ticker}...")
-            yield self.ticker, df
+            if not DEBUG: print(f" fetching {ticker}...")
+            yield ticker, yf_df
 
-    def _process_yfinance_data(self, data_gen: object) -> list[tuple]:
+    def _process_yfinance_data(self, data_gen: object) -> pd.DataFrame:
         """"""
-        if DEBUG:
-            logger.debug(f"_process_yfinance_data(data_gen={type(data_gen)}, data_line={type(self.data_line)})")
+        if DEBUG: logger.debug(f"_process_yfinance_data(data_gen={type(data_gen)})")
 
         ticker, yf_df = next(data_gen)
 
@@ -361,8 +359,7 @@ class YahooFinanceDataProcessor(BaseProcessor):
         # add each data line to dataframe
         def add_clop_series(loc: int) -> None:
             """difference between the close and open price"""
-            if DEBUG:
-                logger.debug(f"add_clop_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_clop_series(loc={loc})")
 
             df.insert(
                 loc=loc,
@@ -373,12 +370,10 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
         def add_clv_series(loc: int) -> None:
             """close location value, relative to the high-low range"""
-            if DEBUG:
-                logger.debug(f"add_clv_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_clv_series(loc={loc})")
+
             try:
-                clv = list(
-                    round((2 * yf_df["Close"] - yf_df["Low"] - yf_df["High"]) / (yf_df["High"] - yf_df["Low"]) * 100)
-                )
+                clv = list(round((2 * yf_df["Close"] - yf_df["Low"] - yf_df["High"]) / (yf_df["High"] - yf_df["Low"]) * 100))
             except ZeroDivisionError as e:
                 logger.debug(f"*** ERROR *** {e}")
             else:
@@ -386,8 +381,7 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
         def add_cwap_series(loc: int) -> None:
             """close weighted average price excluding open price"""
-            if DEBUG:
-                logger.debug(f"add_cwap_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_cwap_series(loc={loc})")
 
             df.insert(
                 loc=loc,
@@ -398,8 +392,7 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
         def add_hilo_series(loc: int) -> None:
             """difference between the high and low price"""
-            if DEBUG:
-                logger.debug(f"add_hilo_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_hilo_series(loc={loc})")
 
             df.insert(
                 loc=loc,
@@ -410,13 +403,12 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
         def add_volume_series(loc: int) -> None:
             """number of shares traded"""
-            if DEBUG:
-                logger.debug(f"add_volume_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_volume_series(loc={loc})")
+
             df.insert(loc=loc, column="volume", value=list(yf_df["Volume"]), allow_duplicates=True)
 
         # insert values for each data line into df
         for i, item in enumerate(self.data_line):
-            eval(f"add_{item}_series({i})")
+            eval(f"add_{item.lower()}_series({i})")
 
-        # convert dataframe to list of tuples, tuple name is ticker symbol
-        return list(df.itertuples(index=True, name=ticker))
+        return ticker, df
