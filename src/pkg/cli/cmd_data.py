@@ -59,13 +59,12 @@ def cli(ctx, arguments):
 
         client.fetch_indicator_data(ctx=ctx)
 
-        # get target ohlc data
+        client.fetch_target_data(ctx=ctx)
         # if ctx['interface']['target_data'] != 'None':
         #     for index, symbol in enumerate(ctx['interface']['target_data']):
         #         if not DEBUG: print(f"  fetching target data for {symbol}...")
         #         sleep(2)
         #         ctx['interface']['index'] = index
         #         client.fetch_target_data(ctx=ctx, symbol=symbol)
-        #     if not DEBUG: print(' finished!')
 
         if not DEBUG: print(f" Saved data to '{ctx['default']['work_dir']}{ctx['interface']['command']}/{ctx['interface']['database']}'\n")

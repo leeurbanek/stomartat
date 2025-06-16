@@ -1,10 +1,11 @@
 """src/pkg/data_srv/client.py\n
-fetch_indicator_data(ctx) - fetch OHLC data\n
+fetch_indicator_data(ctx) - fetch data lines\n
+fetch_target_data(ctx) - fetch OHLC data
 """
 import logging
 
 from pkg import DEBUG
-from pkg.data_srv import process, utils
+from pkg.data_srv import utils
 
 
 logger = logging.getLogger(__name__)
@@ -27,45 +28,21 @@ def fetch_indicator_data(ctx:dict)->None:
         utils.write_indicator_data_to_sqlite_db(ctx=ctx, data_tuple=data_tuple)
 
 
-def fetch_target_data(ctx:dict, symbol:str)->None:
+def fetch_target_data(ctx:dict)->None:
     """ohlc price data for target symbol."""
-    if DEBUG: logger.debug(f"fetch_target_data(ctx: {type(ctx)}, symbol: {symbol})")
+    if DEBUG: logger.debug(f"fetch_target_data(ctx={type(ctx)})")
 
-    _, df = _select_data_provider(ctx=ctx, symbol=symbol)
+#     _, df = _select_data_provider(ctx=ctx, symbol=symbol)
 
-    tuple_list = process.df_to_list_of_tuples(symbol=symbol, df=df)
+#     tuple_list = process.df_to_list_of_tuples(symbol=symbol, df=df)
 
-    db_writer = utils.SqliteWriter(ctx=ctx)
-    db_writer.save_target_data(tuple_list=tuple_list)
-
-
-def _create_dataframe_for_symbol(ctx:dict, data:tuple)->None:
-    """"""
-    if DEBUG: logger.debug(f"_create_dataframe_for_symbol(ctx={type(ctx)}, data={data})")
-    start = process.DataProcessor(ctx=ctx, data=data)
-    return start.process_dataframe()
+#     db_writer = utils.SqliteWriter(ctx=ctx)
+#     db_writer.save_target_data(tuple_list=tuple_list)
 
 
 def _select_data_provider(ctx:dict)->object:
-    """"""
+    """Use provider from data service config file"""
     if DEBUG: logger.debug(f"_select_data_provider(ctx={ctx})")
-
-    # if ctx['data_service']['data_provider'] == "alphavantage":
-    #     from pkg.data_srv.reader import AlphaVantageReader
-    #     reader = AlphaVantageReader(ctx=ctx)
-    #     data = reader.get_ticker_df_tuple(ticker=symbol)
-
-    # elif ctx['data_service']['data_provider'] == "tiingo":
-    #     from pkg.data_srv.reader import TiingoReader
-    #     reader = TiingoReader(ctx=ctx)
-    #     data = reader.get_ticker_df_tuple(ticker=symbol)
-
-    # elif ctx['data_service']['data_provider'] == "yfinance":
-    #     from pkg.data_srv.reader import YahooFinanceReader
-    #     reader = YahooFinanceReader(ctx=ctx)
-    #     data = reader.get_ticker_df_tuple(ticker=symbol)
-
-    # return data
 
     match ctx['data_service']['data_provider']:
         case "alphavantage":
@@ -78,4 +55,4 @@ def _select_data_provider(ctx:dict)->object:
             from pkg.data_srv.agent import YahooFinanceDataProcessor
             return YahooFinanceDataProcessor(ctx=ctx)
         case _:  # Pattern not attempted
-            pass
+            raise ValueError(f"unknown provider: {ctx['data_service']['data_provider']}")

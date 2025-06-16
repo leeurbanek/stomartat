@@ -2,15 +2,13 @@
 Collect open, high, low, close, volume \n
 (ohlc) data from various online sources.\n
 Process data into lines; volume, average price,\n
-close location value, etc. Returns a named tuple.\n
+close location value, etc. Returns a tuple.\n
 class AlphaVantageDataProcessor\n
 class TiingoDataProcessor\n
 class YahooFinanceDataProcessor
 """
 
-import datetime, time
-import logging
-import os
+import datetime, logging, os, time
 
 import pandas as pd
 
@@ -48,27 +46,24 @@ class BaseProcessor:
         end = datetime.date.today()
         return start, end
 
-    def download_and_parse_price_data(self, ticker: str):
-        """"""
-        if DEBUG:
-            logger.debug(f"download_and_parse_price_data(self={self}, ticker={ticker})")
+    def download_and_parse_price_data(self, ticker: str)->tuple:
+        """Returns a tuple, (ticker, dataframe)"""
+        if DEBUG: logger.debug(f"download_and_parse_price_data(self={self}, ticker={ticker})")
 
         data_gen = eval(f"self._{self.data_provider}_data_generator(ticker=ticker)")
-        tuple_list = eval(f"self._process_{self.data_provider}_data(data_gen=data_gen)")
-        return tuple_list
+        return eval(f"self._process_{self.data_provider}_data(data_gen=data_gen)")
 
 
 class AlphaVantageDataProcessor(BaseProcessor):
     """Fetch ohlc price data from alphavantage.com"""
-
     import requests
-    from datetime import datetime as dt
 
     def __init__(self, ctx: dict):
         super().__init__(ctx=ctx)
         self.api_key = os.getenv(f"API_TOKEN_{self.data_provider.upper()}")
         self.api_key_1 = os.getenv(f"API_TOKEN_{self.data_provider.upper()}_1")
         self.function = self._parse_frequency
+        self.index = ctx['interface']['index']
 
     def __repr__(self):
         return (
@@ -77,7 +72,6 @@ class AlphaVantageDataProcessor(BaseProcessor):
             f"api_key_1={self.api_key_1}, "
             f"data_provider={self.data_provider}, "
             f"function={self.function}, "
-            # f"index={self.index}, "
             f"url={self.url})"
         )
 
@@ -88,7 +82,7 @@ class AlphaVantageDataProcessor(BaseProcessor):
         return frequency_dict[self.frequency]
 
     def _alphavantage_data_generator(self, ticker: str) -> object:
-        """"""
+        """Yields a json generator object"""
         if DEBUG:
             logger.debug(f"_fetch_alphavantage_data(ticker={ticker})")
 
@@ -119,28 +113,24 @@ class AlphaVantageDataProcessor(BaseProcessor):
         #             time.sleep(1)
 
     def _process_alphavantage_data(self, data_gen: object) -> list[tuple]:
-        """"""
-        if DEBUG:
-            logger.debug(f"_process_alphavantage_data(data_gen={type(data_gen)})")
+        """Returns a tuple (ticker, dataframe)"""
+        if DEBUG: logger.debug(f"_process_alphavantage_data(data_gen={type(data_gen)})")
 
         alphavantage_dict = next(data_gen)
         ticker = alphavantage_dict["Meta Data"]["2. Symbol"]
         time_series_dict = alphavantage_dict["Time Series (Daily)"]
 
-        if DEBUG:
-            logger.debug(f"ticker: {ticker}, type(time_series_dict): {type(time_series_dict)}\n{time_series_dict}")
-
         # create empty dataframe with index as a timestamp
         df = pd.DataFrame(
-            index=[round(time.mktime(self.dt.strptime(d[:10], "%Y-%m-%d").timetuple())) for d in time_series_dict]
+            index=[round(time.mktime(datetime.datetime.strptime(d[:10], "%Y-%m-%d").timetuple())) for d in time_series_dict]
         )
         df.index.name = "date"
 
         # add the data lines to dataframe
         def add_clop_series(loc: int) -> None:
             """difference between the close and open price"""
-            if DEBUG:
-                logger.debug(f"add_clop_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_clop_series(loc={loc})")
+
             series_list = list()
             for i in time_series_dict:
                 open_ = float(time_series_dict[i]["1. open"])
@@ -150,8 +140,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_clv_series(loc: int) -> None:
             """close location value, relative to the high-low range"""
-            if DEBUG:
-                logger.debug(f"add_clv_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_clv_series(loc={loc})")
+
             series_list = list()
             for i in time_series_dict:
                 high = float(time_series_dict[i]["2. high"])
@@ -165,8 +155,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_cwap_series(loc: int) -> None:
             """close weighted average price excluding open price"""
-            if DEBUG:
-                logger.debug(f"add_cwap_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_cwap_series(loc={loc})")
+
             series_list = list()
             for i in time_series_dict:
                 high = float(time_series_dict[i]["2. high"])
@@ -177,8 +167,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_hilo_series(loc: int) -> None:
             """difference between the high and low price"""
-            if DEBUG:
-                logger.debug(f"add_hilo_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_hilo_series(loc={loc})")
+
             series_list = list()
             for i in time_series_dict:
                 high = float(time_series_dict[i]["2. high"])
@@ -188,8 +178,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_volume_series(loc: int) -> None:
             """number of shares traded"""
-            if DEBUG:
-                logger.debug(f"add_volume_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_volume_series(loc={loc})")
+
             volume = [int(time_series_dict[i]["5. volume"]) for i in time_series_dict]
             df.insert(loc=loc, column="volume", value=volume, allow_duplicates=True)
 
@@ -197,14 +187,13 @@ class AlphaVantageDataProcessor(BaseProcessor):
         for i, item in enumerate(self.data_line):
             eval(f"add_{item}_series({i})")
 
-        # convert dataframe to list of tuples, tuple name is ticker symbol
-        return list(df.itertuples(index=True, name=ticker))
+        # # convert dataframe to list of tuples, tuple name is ticker symbol
+        # return list(df.itertuples(index=True, name=ticker))
+        return ticker, df
 
 
 class TiingoDataProcessor(BaseProcessor):
     """Fetch ohlc price data from tiingo.com"""
-
-    from datetime import datetime as dt
     from tiingo import TiingoClient
 
     def __init__(self, ctx: dict):
@@ -217,13 +206,12 @@ class TiingoDataProcessor(BaseProcessor):
             f"{self.__class__.__name__}("
             f"api_token={self.api_token}, "
             f"frequency={self.frequency}, "
-            # f"index={self.index}, "
             f"lookback={self.lookback}, "
             f"start_date={self.start_date}, "
         )
 
     def _tiingo_data_generator(self, ticker: str) -> object:
-        """"""
+        """Yields a tuple (ticker, json)"""
         if DEBUG:
             logger.debug(f"_tiingo_data_generator(ticker={ticker})")
 
@@ -245,30 +233,28 @@ class TiingoDataProcessor(BaseProcessor):
             yield ticker, historical_prices
 
     def _process_tiingo_data(self, data_gen: object) -> list[tuple]:
-        """"""
-        if DEBUG:
-            logger.debug(f"_process_tiingo_data(data_gen={type(data_gen)})")
+        """Returns a tuple (ticker, dataframe)"""
+        if DEBUG: logger.debug(f"_process_tiingo_data(data_gen={type(data_gen)})")
 
         ticker, dict_list = next(data_gen)  # unpack items in data_gen
 
         # create empty dataframe with index as a timestamp
         df = pd.DataFrame(
-            index=[round(time.mktime(self.dt.strptime(d["date"][:10], "%Y-%m-%d").timetuple())) for d in dict_list]
+            index=[round(time.mktime(datetime.datetime.strptime(d["date"][:10], "%Y-%m-%d").timetuple())) for d in dict_list]
         )
         df.index.name = "date"
 
         # add each data line to dataframe
         def add_clop_series(loc: int) -> None:
             """difference between the close and open price"""
-            if DEBUG:
-                logger.debug(f"add_clop_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_clop_series(loc={loc})")
+
             clop = [round((d["adjClose"] - d["adjOpen"]) * 100) for d in dict_list]
             df.insert(loc=loc, column="clop", value=clop, allow_duplicates=True)
 
         def add_clv_series(loc: int) -> None:
             """close location value, relative to the high-low range"""
-            if DEBUG:
-                logger.debug(f"add_clv_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_clv_series(loc={loc})")
             try:
                 clv = [
                     round(((2 * d["adjClose"] - d["adjLow"] - d["adjHigh"]) / (d["adjHigh"] - d["adjLow"])) * 100)
@@ -280,22 +266,22 @@ class TiingoDataProcessor(BaseProcessor):
 
         def add_cwap_series(loc: int) -> None:
             """close weighted average price excluding open price"""
-            if DEBUG:
-                logger.debug(f"add_cwap_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_cwap_series(loc={loc})")
+
             cwap = [round(((d["adjHigh"] + d["adjLow"] + 2 * d["adjClose"]) / 4) * 100) for d in dict_list]
             df.insert(loc=loc, column="cwap", value=cwap, allow_duplicates=True)
 
         def add_hilo_series(loc: int) -> None:
             """difference between the high and low price"""
-            if DEBUG:
-                logger.debug(f"add_hilo_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_hilo_series(loc={loc})")
+
             hilo = [round((d["adjHigh"] - d["adjLow"]) * 100) for d in dict_list]
             df.insert(loc=loc, column="hilo", value=hilo, allow_duplicates=True)
 
         def add_volume_series(loc: int) -> None:
             """number of shares traded"""
-            if DEBUG:
-                logger.debug(f"add_volume_series(loc={loc})")
+            if DEBUG: logger.debug(f"add_volume_series(loc={loc})")
+
             volume = [d["adjVolume"] for d in dict_list]
             df.insert(loc=loc, column="volume", value=volume, allow_duplicates=True)
 
@@ -303,13 +289,13 @@ class TiingoDataProcessor(BaseProcessor):
         for i, item in enumerate(self.data_line):
             eval(f"add_{item}_series({i})")
 
-        # convert dataframe to list of tuples, tuple name is ticker symbol
-        return list(df.itertuples(index=True, name=ticker))
+        # # convert dataframe to list of tuples, tuple name is ticker symbol
+        # return list(df.itertuples(index=True, name=ticker))
+        return ticker, df
 
 
 class YahooFinanceDataProcessor(BaseProcessor):
-    """Fetch ohlc price data from tiingo.com"""
-
+    """Fetch ohlc price data using yfinance"""
     import yfinance as yf
 
     def __init__(self, ctx: dict):
@@ -321,7 +307,6 @@ class YahooFinanceDataProcessor(BaseProcessor):
             f"{self.__class__.__name__}("
             f"data_line={self.data_line}, "
             f"data_provider={self.data_provider}, "
-            f"index={self.index}, "
             f"interval={self.interval}, "
             f"start_date={self.start_date}, "
             f"end_date={self.end_date})"
@@ -334,8 +319,8 @@ class YahooFinanceDataProcessor(BaseProcessor):
         return frequency_dict[self.frequency]
 
     def _yfinance_data_generator(self, ticker: str) -> object:
-        """"""
-        if DEBUG: logger.debug(f"_yfinance_data_generator(index={self.index}, ticker={ticker})")
+        """Yields a generator object tuple (ticker, dataframe)"""
+        if DEBUG: logger.debug(f"_yfinance_data_generator(ticker={ticker})")
 
         try:
             yf_data = self.yf.Ticker(ticker=ticker)
@@ -347,7 +332,7 @@ class YahooFinanceDataProcessor(BaseProcessor):
             yield ticker, yf_df
 
     def _process_yfinance_data(self, data_gen: object) -> pd.DataFrame:
-        """"""
+        """Returns a tuple (ticker, dataframe)"""
         if DEBUG: logger.debug(f"_process_yfinance_data(data_gen={type(data_gen)})")
 
         ticker, yf_df = next(data_gen)

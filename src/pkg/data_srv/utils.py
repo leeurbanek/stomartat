@@ -69,26 +69,25 @@ def write_indicator_data_to_sqlite_db(ctx: dict, data_tuple: tuple):
     else:
         if not DEBUG: print(f" writing {data_tuple[0]} to db.\n")
 
-    # db = f"temp/data/{provider}.db"
-    # with sqlite3.connect(database=db) as conn:
-    #     cursor = conn.cursor()
-    #     for row in tuple_list:
-    #         symbol = type(row).__name__
-    #         date = row.Index
-    #         for dl in data_line:
-    #             table = dl.lower()
-    #             value = getattr(row, table)
-    #             try:
-    #                 if index == 0:
-    #                     query = f"INSERT INTO {table} (Date, {symbol}) VALUES (?, ?)"
-    #                     # if DEBUG: logger.debug(f"query: {query}")
-    #                     cursor.execute(query, (date, value))
-    #                 else:
-    #                     # query = f"UPDATE {table} SET {symbol} = ? WHERE Date = {date}", (value,)
-    #                     # if DEBUG: logger.debug(f"query: {query}")
-    #                     cursor.execute(f"UPDATE {table} SET {symbol} = ? WHERE Date = {date}", (value,))
-    #             except Exception as e:
-    #                 logger.debug(f"*** ERROR *** {e}")
-    #             else:
-    #                 conn.commit()
-    #     if not DEBUG: print(f" writing {symbol} data to db.\n")
+# tables are data lines, columns are ticker symbols. Very slow!
+# with sqlite3.connect(database=db) as conn:
+#     cursor = conn.cursor()
+#     for row in tuple_list:
+#         symbol = type(row).__name__
+#         date = row.Index
+#         for dl in data_line:
+#             table = dl.lower()
+#             value = getattr(row, table)
+#             try:
+#                 if index == 0:
+#                     query = f"INSERT INTO {table} (Date, {symbol}) VALUES (?, ?)"
+#                     # if DEBUG: logger.debug(f"query: {query}")
+#                     cursor.execute(query, (date, value))
+#                 else:
+#                     # query = f"UPDATE {table} SET {symbol} = ? WHERE Date = {date}", (value,)
+#                     # if DEBUG: logger.debug(f"query: {query}")
+#                     cursor.execute(f"UPDATE {table} SET {symbol} = ? WHERE Date = {date}", (value,))
+#             except Exception as e:
+#                 logger.debug(f"*** ERROR *** {e}")
+#             else:
+#                 conn.commit()
