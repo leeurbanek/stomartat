@@ -10,9 +10,11 @@ class YahooFinanceDataProcessor
 
 import datetime, logging, os, time
 
+import numpy as np
 import pandas as pd
 
 from dotenv import load_dotenv
+from sklearn.preprocessing import RobustScaler
 
 from pkg import DEBUG
 
@@ -36,7 +38,7 @@ class BaseProcessor:
         self.index = None
         self.lookback = int(ctx["data_service"]["data_lookback"])
         self.start_date, self.end_date = self._start_end_date
-        self.url = ctx["data_service"][f"url_{self.data_provider}"]
+        # self.url = ctx["data_service"][f"url_{self.data_provider}"]
 
     @property
     def _start_end_date(self):
@@ -46,16 +48,23 @@ class BaseProcessor:
         end = datetime.date.today()
         return start, end
 
-    def download_and_parse_price_data(self, ticker: str)->tuple:
+    def download_and_parse_price_data(self, ticker: str) -> tuple:
         """Returns a tuple, (ticker, dataframe)"""
-        if DEBUG: logger.debug(f"download_and_parse_price_data(self={self}, ticker={ticker})")
+        if DEBUG:
+            logger.debug(f"download_and_parse_price_data(self={self}, ticker={ticker})")
 
+        if not DEBUG:
+            print(f"  - fetching {ticker}...\t", end="")
         data_gen = eval(f"self._{self.data_provider}_data_generator(ticker=ticker)")
+
+        if not DEBUG:
+            print("processing data\t", end="")
         return eval(f"self._process_{self.data_provider}_data(data_gen=data_gen)")
 
 
 class AlphaVantageDataProcessor(BaseProcessor):
     """Fetch ohlc price data from alphavantage.com"""
+
     import requests
 
     def __init__(self, ctx: dict):
@@ -63,7 +72,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
         self.api_key = os.getenv(f"API_TOKEN_{self.data_provider.upper()}")
         self.api_key_1 = os.getenv(f"API_TOKEN_{self.data_provider.upper()}_1")
         self.function = self._parse_frequency
-        self.index = ctx['interface']['index']
+        self.index = ctx["interface"]["index"]
+        self.url = ctx["data_service"][f"url_{self.data_provider}"]
 
     def __repr__(self):
         return (
@@ -114,7 +124,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
     def _process_alphavantage_data(self, data_gen: object) -> list[tuple]:
         """Returns a tuple (ticker, dataframe)"""
-        if DEBUG: logger.debug(f"_process_alphavantage_data(data_gen={type(data_gen)})")
+        if DEBUG:
+            logger.debug(f"_process_alphavantage_data(data_gen={type(data_gen)})")
 
         alphavantage_dict = next(data_gen)
         ticker = alphavantage_dict["Meta Data"]["2. Symbol"]
@@ -122,14 +133,17 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         # create empty dataframe with index as a timestamp
         df = pd.DataFrame(
-            index=[round(time.mktime(datetime.datetime.strptime(d[:10], "%Y-%m-%d").timetuple())) for d in time_series_dict]
+            index=[
+                round(time.mktime(datetime.datetime.strptime(d[:10], "%Y-%m-%d").timetuple())) for d in time_series_dict
+            ]
         )
         df.index.name = "date"
 
         # add the data lines to dataframe
         def add_clop_series(loc: int) -> None:
             """difference between the close and open price"""
-            if DEBUG: logger.debug(f"add_clop_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_clop_series(loc={loc})")
 
             series_list = list()
             for i in time_series_dict:
@@ -140,7 +154,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_clv_series(loc: int) -> None:
             """close location value, relative to the high-low range"""
-            if DEBUG: logger.debug(f"add_clv_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_clv_series(loc={loc})")
 
             series_list = list()
             for i in time_series_dict:
@@ -155,7 +170,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_cwap_series(loc: int) -> None:
             """close weighted average price excluding open price"""
-            if DEBUG: logger.debug(f"add_cwap_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_cwap_series(loc={loc})")
 
             series_list = list()
             for i in time_series_dict:
@@ -167,7 +183,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_hilo_series(loc: int) -> None:
             """difference between the high and low price"""
-            if DEBUG: logger.debug(f"add_hilo_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_hilo_series(loc={loc})")
 
             series_list = list()
             for i in time_series_dict:
@@ -178,7 +195,8 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
         def add_volume_series(loc: int) -> None:
             """number of shares traded"""
-            if DEBUG: logger.debug(f"add_volume_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_volume_series(loc={loc})")
 
             volume = [int(time_series_dict[i]["5. volume"]) for i in time_series_dict]
             df.insert(loc=loc, column="volume", value=volume, allow_duplicates=True)
@@ -194,6 +212,7 @@ class AlphaVantageDataProcessor(BaseProcessor):
 
 class TiingoDataProcessor(BaseProcessor):
     """Fetch ohlc price data from tiingo.com"""
+
     from tiingo import TiingoClient
 
     def __init__(self, ctx: dict):
@@ -234,27 +253,33 @@ class TiingoDataProcessor(BaseProcessor):
 
     def _process_tiingo_data(self, data_gen: object) -> list[tuple]:
         """Returns a tuple (ticker, dataframe)"""
-        if DEBUG: logger.debug(f"_process_tiingo_data(data_gen={type(data_gen)})")
+        if DEBUG:
+            logger.debug(f"_process_tiingo_data(data_gen={type(data_gen)})")
 
         ticker, dict_list = next(data_gen)  # unpack items in data_gen
 
         # create empty dataframe with index as a timestamp
         df = pd.DataFrame(
-            index=[round(time.mktime(datetime.datetime.strptime(d["date"][:10], "%Y-%m-%d").timetuple())) for d in dict_list]
+            index=[
+                round(time.mktime(datetime.datetime.strptime(d["date"][:10], "%Y-%m-%d").timetuple()))
+                for d in dict_list
+            ]
         )
         df.index.name = "date"
 
         # add each data line to dataframe
         def add_clop_series(loc: int) -> None:
             """difference between the close and open price"""
-            if DEBUG: logger.debug(f"add_clop_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_clop_series(loc={loc})")
 
             clop = [round((d["adjClose"] - d["adjOpen"]) * 100) for d in dict_list]
             df.insert(loc=loc, column="clop", value=clop, allow_duplicates=True)
 
         def add_clv_series(loc: int) -> None:
             """close location value, relative to the high-low range"""
-            if DEBUG: logger.debug(f"add_clv_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_clv_series(loc={loc})")
             try:
                 clv = [
                     round(((2 * d["adjClose"] - d["adjLow"] - d["adjHigh"]) / (d["adjHigh"] - d["adjLow"])) * 100)
@@ -266,21 +291,24 @@ class TiingoDataProcessor(BaseProcessor):
 
         def add_cwap_series(loc: int) -> None:
             """close weighted average price excluding open price"""
-            if DEBUG: logger.debug(f"add_cwap_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_cwap_series(loc={loc})")
 
             cwap = [round(((d["adjHigh"] + d["adjLow"] + 2 * d["adjClose"]) / 4) * 100) for d in dict_list]
             df.insert(loc=loc, column="cwap", value=cwap, allow_duplicates=True)
 
         def add_hilo_series(loc: int) -> None:
             """difference between the high and low price"""
-            if DEBUG: logger.debug(f"add_hilo_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_hilo_series(loc={loc})")
 
             hilo = [round((d["adjHigh"] - d["adjLow"]) * 100) for d in dict_list]
             df.insert(loc=loc, column="hilo", value=hilo, allow_duplicates=True)
 
         def add_volume_series(loc: int) -> None:
             """number of shares traded"""
-            if DEBUG: logger.debug(f"add_volume_series(loc={loc})")
+            if DEBUG:
+                logger.debug(f"add_volume_series(loc={loc})")
 
             volume = [d["adjVolume"] for d in dict_list]
             df.insert(loc=loc, column="volume", value=volume, allow_duplicates=True)
@@ -296,6 +324,7 @@ class TiingoDataProcessor(BaseProcessor):
 
 class YahooFinanceDataProcessor(BaseProcessor):
     """Fetch ohlc price data using yfinance"""
+
     import yfinance as yf
 
     def __init__(self, ctx: dict):
@@ -320,7 +349,8 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
     def _yfinance_data_generator(self, ticker: str) -> object:
         """Yields a generator object tuple (ticker, dataframe)"""
-        if DEBUG: logger.debug(f"_yfinance_data_generator(ticker={ticker})")
+        if DEBUG:
+            logger.debug(f"_yfinance_data_generator(ticker={ticker})")
 
         try:
             yf_data = self.yf.Ticker(ticker=ticker)
@@ -328,72 +358,59 @@ class YahooFinanceDataProcessor(BaseProcessor):
         except Exception as e:
             logger.debug(f"*** ERROR *** {e}")
         else:
-            if not DEBUG: print(f" fetching {ticker}...")
             yield ticker, yf_df
 
     def _process_yfinance_data(self, data_gen: object) -> pd.DataFrame:
         """Returns a tuple (ticker, dataframe)"""
-        if DEBUG: logger.debug(f"_process_yfinance_data(data_gen={type(data_gen)})")
+        if DEBUG:
+            logger.debug(f"_process_yfinance_data(data_gen={type(data_gen)})")
 
         ticker, yf_df = next(data_gen)
+        yf_df = yf_df.drop(columns=yf_df.columns.values[-3:], axis=1)
 
         # create empty dataframe with index as a timestamp
         df = pd.DataFrame(index=yf_df.index.values.astype(int) // 10**9)
         df.index.name = "date"
 
-        # add each data line to dataframe
-        def add_clop_series(loc: int) -> None:
-            """difference between the close and open price"""
-            if DEBUG: logger.debug(f"add_clop_series(loc={loc})")
+        # difference between the close and open price
+        clop = list(round((yf_df["Close"] - yf_df["Open"]) * 100).astype(int))
+        if DEBUG: logger.debug(f"clop: {clop} {type(clop)}")
 
-            df.insert(
-                loc=loc,
-                column="clop",
-                value=list(round((yf_df["Close"] - yf_df["Open"]) * 100).astype(int)),
-                allow_duplicates=True,
+        # close location value, relative to the high-low range
+        try:
+            clv = list(
+                round((2 * yf_df["Close"] - yf_df["Low"] - yf_df["High"]) / (yf_df["High"] - yf_df["Low"]) * 100)
             )
+            if DEBUG: logger.debug(f"clv: {clv} {type(clv)}")
+        except ZeroDivisionError as e:
+            logger.debug(f"*** ERROR *** {e}")
 
-        def add_clv_series(loc: int) -> None:
-            """close location value, relative to the high-low range"""
-            if DEBUG: logger.debug(f"add_clv_series(loc={loc})")
+        # close weighted average price exclude open price
+        cwap = np.array(
+            list((2 * yf_df["Close"] + yf_df["High"] + yf_df["Low"]) / 4)
+        ).reshape(-1, 1)
+        scaler = RobustScaler(quantile_range=(0.0, 100.0))
+        cwap = np.rint((scaler.fit_transform(cwap).flatten() + 10) * 100).astype(int)
+        if DEBUG: logger.debug(f"scaled_cwap: {cwap} {type(cwap)}")
 
-            try:
-                clv = list(round((2 * yf_df["Close"] - yf_df["Low"] - yf_df["High"]) / (yf_df["High"] - yf_df["Low"]) * 100))
-            except ZeroDivisionError as e:
-                logger.debug(f"*** ERROR *** {e}")
-            else:
-                df.insert(loc=loc, column="clv", value=clv, allow_duplicates=True)
+        # difference between the high and low price
+        hilo = list(round((yf_df["High"] - yf_df["Low"]) * 100).astype(int))
+        if DEBUG: logger.debug(f"hilo: {hilo} {type(hilo)}")
 
-        def add_cwap_series(loc: int) -> None:
-            """close weighted average price excluding open price"""
-            if DEBUG: logger.debug(f"add_cwap_series(loc={loc})")
+        # number of shares traded
+        volume = np.array(list(yf_df["Volume"])).reshape(-1, 1)
+        scaler = RobustScaler(quantile_range=(0.0, 100.0))
+        volume = np.rint((scaler.fit_transform(volume).flatten() + 10) * 100).astype(int)
+        if DEBUG: logger.debug(f"scaled_volume: {volume} {type(volume)}")
 
-            df.insert(
-                loc=loc,
-                column="cwap",
-                value=list(round((yf_df["High"] + yf_df["Low"] + 2 * yf_df["Close"]) / 4 * 100).astype(int)),
-                allow_duplicates=True,
-            )
-
-        def add_hilo_series(loc: int) -> None:
-            """difference between the high and low price"""
-            if DEBUG: logger.debug(f"add_hilo_series(loc={loc})")
-
-            df.insert(
-                loc=loc,
-                column="hilo",
-                value=list(round((yf_df["High"] - yf_df["Low"]) * 100).astype(int)),
-                allow_duplicates=True,
-            )
-
-        def add_volume_series(loc: int) -> None:
-            """number of shares traded"""
-            if DEBUG: logger.debug(f"add_volume_series(loc={loc})")
-
-            df.insert(loc=loc, column="volume", value=list(yf_df["Volume"]), allow_duplicates=True)
+        # price times number of shares traded
+        mass = np.array(cwap * volume).reshape(-1, 1)
+        scaler = RobustScaler(quantile_range=(0.0, 100.0))
+        mass = np.rint((scaler.fit_transform(mass).flatten() + 10) * 100).astype(int)
+        if DEBUG: logger.debug(f"scaled_mass: {mass} {type(mass)}")
 
         # insert values for each data line into df
         for i, item in enumerate(self.data_line):
-            eval(f"add_{item.lower()}_series({i})")
+            df.insert(loc=i, column=f"{item.lower()}", value=eval(item.lower()), allow_duplicates=True)
 
         return ticker, df

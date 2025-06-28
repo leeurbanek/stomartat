@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 def fetch_indicator_data(ctx:dict)->None:
     """Data for calculating indicators i.e. clv, price, volume etc."""
     if DEBUG: logger.debug(f"fetch_indicator_data(ctx={type(ctx)})")
+    if not DEBUG:
+        print(" Begin download process:")
 
     # create database
     utils.create_sqlite_indicator_database(ctx=ctx)
@@ -23,9 +25,15 @@ def fetch_indicator_data(ctx:dict)->None:
 
     # get and save data for each ticker
     for index, ticker in enumerate(ctx['interface']['arguments']):
-        ctx['interface']['index'] = index
+        if not DEBUG:
+            print(f"  - fetching {ticker}\t", end="")
+
+        ctx['interface']['index'] = index  # alphavantage may throttle at five downloads
         data_tuple = processor.download_and_parse_price_data(ticker=ticker)
         utils.write_indicator_data_to_sqlite_db(ctx=ctx, data_tuple=data_tuple)
+
+    if not DEBUG:
+        print(" finished.")
 
 
 def fetch_target_data(ctx:dict)->None:
@@ -54,5 +62,5 @@ def _select_data_provider(ctx:dict)->object:
         case "yfinance":
             from pkg.data_srv.agent import YahooFinanceDataProcessor
             return YahooFinanceDataProcessor(ctx=ctx)
-        case _:  # Pattern not attempted
+        case _:
             raise ValueError(f"unknown provider: {ctx['data_service']['data_provider']}")
