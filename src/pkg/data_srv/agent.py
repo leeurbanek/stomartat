@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 
 from dotenv import load_dotenv
-from sklearn.preprocessing import RobustScaler
 
 from pkg import DEBUG
 
@@ -37,8 +36,8 @@ class BaseProcessor:
         self.frequency = ctx["data_service"]["data_frequency"]
         self.index = None
         self.lookback = int(ctx["data_service"]["data_lookback"])
+        self.scaler = self._set_sklearn_scaler(ctx["data_service"]["sklearn_scaler"])
         self.start_date, self.end_date = self._start_end_date
-        # self.url = ctx["data_service"][f"url_{self.data_provider}"]
 
     @property
     def _start_end_date(self):
@@ -47,6 +46,15 @@ class BaseProcessor:
         start = datetime.date.today() - datetime.timedelta(days=lookback)
         end = datetime.date.today()
         return start, end
+
+    def _set_sklearn_scaler(self, scaler):
+        """Uses config file [data_service][sklearn_scaler] value"""
+        if scaler == "MinMaxScaler":
+            from sklearn.preprocessing import MinMaxScaler
+            return MinMaxScaler()
+        elif scaler == "RobustScaler":
+            from sklearn.preprocessing import RobustScaler
+            return RobustScaler(quantile_range=(0.0, 100.0))
 
     def download_and_parse_price_data(self, ticker: str) -> tuple:
         """Returns a tuple, (ticker, dataframe)"""
@@ -82,6 +90,7 @@ class AlphaVantageDataProcessor(BaseProcessor):
             f"api_key_1={self.api_key_1}, "
             f"data_provider={self.data_provider}, "
             f"function={self.function}, "
+            f"scaler={self.scaler}, "
             f"url={self.url})"
         )
 
@@ -205,8 +214,6 @@ class AlphaVantageDataProcessor(BaseProcessor):
         for i, item in enumerate(self.data_line):
             eval(f"add_{item}_series({i})")
 
-        # # convert dataframe to list of tuples, tuple name is ticker symbol
-        # return list(df.itertuples(index=True, name=ticker))
         return ticker, df
 
 
@@ -226,6 +233,7 @@ class TiingoDataProcessor(BaseProcessor):
             f"api_token={self.api_token}, "
             f"frequency={self.frequency}, "
             f"lookback={self.lookback}, "
+            f"scaler={self.scaler}, "
             f"start_date={self.start_date}, "
         )
 
@@ -317,8 +325,6 @@ class TiingoDataProcessor(BaseProcessor):
         for i, item in enumerate(self.data_line):
             eval(f"add_{item}_series({i})")
 
-        # # convert dataframe to list of tuples, tuple name is ticker symbol
-        # return list(df.itertuples(index=True, name=ticker))
         return ticker, df
 
 
@@ -337,6 +343,7 @@ class YahooFinanceDataProcessor(BaseProcessor):
             f"data_line={self.data_line}, "
             f"data_provider={self.data_provider}, "
             f"interval={self.interval}, "
+            f"scaler={self.scaler}, "
             f"start_date={self.start_date}, "
             f"end_date={self.end_date})"
         )
@@ -389,8 +396,7 @@ class YahooFinanceDataProcessor(BaseProcessor):
         cwap = np.array(
             list((2 * yf_df["Close"] + yf_df["High"] + yf_df["Low"]) / 4)
         ).reshape(-1, 1)
-        scaler = RobustScaler(quantile_range=(0.0, 100.0))
-        cwap = np.rint((scaler.fit_transform(cwap).flatten() + 10) * 100).astype(int)
+        cwap = np.rint((self.scaler.fit_transform(cwap).flatten() + 10) * 100).astype(int)
         if DEBUG: logger.debug(f"scaled_cwap: {cwap} {type(cwap)}")
 
         # difference between the high and low price
@@ -399,14 +405,12 @@ class YahooFinanceDataProcessor(BaseProcessor):
 
         # number of shares traded
         volume = np.array(list(yf_df["Volume"])).reshape(-1, 1)
-        scaler = RobustScaler(quantile_range=(0.0, 100.0))
-        volume = np.rint((scaler.fit_transform(volume).flatten() + 10) * 100).astype(int)
+        volume = np.rint((self.scaler.fit_transform(volume).flatten() + 10) * 100).astype(int)
         if DEBUG: logger.debug(f"scaled_volume: {volume} {type(volume)}")
 
         # price times number of shares traded
         mass = np.array(cwap * volume).reshape(-1, 1)
-        scaler = RobustScaler(quantile_range=(0.0, 100.0))
-        mass = np.rint((scaler.fit_transform(mass).flatten() + 10) * 100).astype(int)
+        mass = np.rint((self.scaler.fit_transform(mass).flatten() + 10) * 100).astype(int)
         if DEBUG: logger.debug(f"scaled_mass: {mass} {type(mass)}")
 
         # insert values for each data line into df

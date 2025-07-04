@@ -95,6 +95,7 @@ DESCRIPTION
     list, if the arguments are not in the current list then
     those items will be added to the list.
 """)
+# TODO need option for sklearn-scaler
 # app_default, change location of the default working directory
 @click.option(
     '--work-dir', 'opt_trans', flag_value='work_dir', help=f"""
