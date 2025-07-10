@@ -33,7 +33,6 @@ def create_sqlite_indicator_database(ctx: dict) -> None:
                         date    INTEGER    NOT NULL,
                         PRIMARY KEY (date)
                     )
-                    WITHOUT ROWID
                 """
                 )
                 # add column for each indicator (data_line)
